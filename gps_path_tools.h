@@ -1,0 +1,69 @@
+
+#pragma once
+
+//   Copyright 2022 Kevin Godden
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+
+
+#include <math.h>
+
+
+namespace gps_path_tools {
+
+static constexpr double geoid_radius_m = 6378100;   // The radius of the Geoid in metres
+
+struct location {
+    double lat;
+    double lon;
+};
+
+inline double to_radians(const double theta) {
+    return (theta * M_PI) / 180.0;
+}
+
+inline double to_degrees(const double theta) {
+    return (theta * 180.0) / M_PI;
+}
+
+//
+//
+inline double distance_gc(const location& l1, const location& l2) {
+    // Convert degrees to radians
+    double lat1 = to_radians(l1.lat);
+    double lon1 = to_radians(l1.lon);
+    double lat2 = to_radians(l2.lat);
+    double lon2 = to_radians(l2.lon);
+
+    // P
+    double rho1 = geoid_radius_m * cos(lat1);
+    double z1 = geoid_radius_m * sin(lat1);
+    double x1 = rho1 * cos(lon1);
+    double y1 = rho1 * sin(lon1);
+    
+    // Q
+    double rho2 = geoid_radius_m * cos(lat2);
+    double z2 = geoid_radius_m * sin(lat2);
+    double x2 = rho2 * cos(lon2);
+    double y2 = rho2 * sin(lon2);
+    
+    // Dot product
+    double dot = (x1 * x2 + y1 * y2 + z1 * z2);
+    double cos_theta = dot / (geoid_radius_m * geoid_radius_m);
+    double theta = acos(cos_theta);
+    
+    // Distance in Metres
+    return geoid_radius_m * theta;
+}
+
+}   // namespace
