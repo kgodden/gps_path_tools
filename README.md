@@ -16,6 +16,7 @@ To use these tools, just include **gps_path_tools.h**, and use the functions in 
 using namespace gps_path_tools;
   
 int main() {
+  // calculate the great circle distance between two lat/lon locations
   double distance = distance_gc({ 52.98277, -6.03927 }, {52.98344, -6.03646 });
   
   // etc...
