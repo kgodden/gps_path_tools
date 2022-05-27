@@ -51,6 +51,13 @@ inline double ddm_to_dd(const double ddm) {
     return decimal_degrees;
 }
 
+// Converts a decimal degrees value 
+// into decimal degrees and decimal minutes.
+inline double dd_to_ddm(const double dd) {
+    double whole_degrees = floor(dd);
+    double minutes = (dd - whole_degrees) * 60.0;
+    return whole_degrees * 100.0 + minutes;
+}
 //
 //
 inline double distance_gc(const location& l1, const location& l2) {
