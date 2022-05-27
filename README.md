@@ -4,7 +4,7 @@ A collection of C++ tools & functions for working with GPS path data, calculatin
 This is intended to be a fairly simple collection of functions to help working with GPS coordinates, positions and paths, its main aims are:
 
 + Provide some useful & simple tools for working with GPS positions and Paths for solving everyday problems.
-+ Not to use any fancy/confusing C++ methods or tricks - prioritise code readibility over code 'sophistication'
++ Not to use any fancy/confusing C++ methods or tricks - use simple types and prioritise code readibility over code 'sophistication'
 + Have no dependencies other than the standard C++ lib.
 + Use via a single include of a header file.
 
