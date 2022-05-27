@@ -40,6 +40,17 @@ inline double to_degrees(const double theta) {
     return (theta * 180.0) / M_PI;
 }
 
+// Converts a decimal degrees and minutes value 
+// into decimal degrees.
+inline double ddm_to_dd(const double ddm) {
+    
+    double degrees = floor(ddm / 100.0);
+    double minutes = ddm - degrees * 100.0;
+    double decimal_degrees = degrees + minutes / 60.0;
+    
+    return decimal_degrees;
+}
+
 //
 //
 inline double distance_gc(const location& l1, const location& l2) {

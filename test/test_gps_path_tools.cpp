@@ -83,6 +83,32 @@ static bool test_to_degrees() {
     return passed;
 }
 
+static bool test_ddm_to_dd() {
+    auto passed = true;
+    
+    std::cout << "Testing ddm_to_dd()" << std::endl;
+    
+    std::vector<test_point2> test_points = {
+        {0.0, 0.0, 0.0000001},
+        { 5258.9655312801942, 52.9827588546699, 0.0000001},
+        { 0.9655312801942, 0.9655312801942 / 60.0, 0.0000001},
+        { 1.9655312801942, 1.9655312801942 / 60.0, 0.0000001},
+        { 10.9655312801942, 10.9655312801942 / 60.0, 0.0000001},
+        { 110.9655312801942, 1 + 10.9655312801942 / 60.0, 0.0000001},
+        { 1110.9655312801942, 11 + 10.9655312801942 / 60.0, 0.0000001},
+        { 11110.9655312801942, 111 + 10.9655312801942 / 60.0, 0.0000001},
+        { 11100.9655312801942, 111 + 0.9655312801942 / 60.0, 0.0000001},
+        { 7730.5, 77.508333, 0.000001},
+    };
+    
+    for (const auto& test_point: test_points) {
+        auto out = ddm_to_dd(test_point.a);
+        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+    }
+    
+    return passed;
+}
+
 static bool test_distance_gc() {
     auto passed = true;
     
@@ -133,6 +159,7 @@ int main() {
     
     tests_passed &= test_to_radians();
     tests_passed &= test_to_degrees();
+    tests_passed &= test_ddm_to_dd();
     tests_passed &= test_distance_gc();
     tests_passed += test_heading_gc();
     
