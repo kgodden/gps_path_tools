@@ -24,6 +24,10 @@ namespace gps_path_tools {
 static constexpr double geoid_radius_m = 6378100;   // The radius of the Geoid in metres
 
 struct location {
+    // Note that it is assumed that latitude and
+    // longitude are always provided as decimal
+    // degrees.
+    
     double lat;
     double lon;
 };
@@ -45,25 +49,52 @@ inline double distance_gc(const location& l1, const location& l2) {
     double lat2 = to_radians(l2.lat);
     double lon2 = to_radians(l2.lon);
 
+    // Note that the radius of the geoid has been taken
+    // out of the calculations of rho, z and cos_theta etc.
+    // as it cancels out.
+    
     // P
-    double rho1 = geoid_radius_m * cos(lat1);
-    double z1 = geoid_radius_m * sin(lat1);
+    double rho1 = cos(lat1);
+    double z1 = sin(lat1);
     double x1 = rho1 * cos(lon1);
     double y1 = rho1 * sin(lon1);
     
     // Q
-    double rho2 = geoid_radius_m * cos(lat2);
-    double z2 = geoid_radius_m * sin(lat2);
+    double rho2 = cos(lat2);
+    double z2 = sin(lat2);
     double x2 = rho2 * cos(lon2);
     double y2 = rho2 * sin(lon2);
     
     // Dot product
     double dot = (x1 * x2 + y1 * y2 + z1 * z2);
-    double cos_theta = dot / (geoid_radius_m * geoid_radius_m);
+    double cos_theta = dot;
     double theta = acos(cos_theta);
     
     // Distance in Metres
     return geoid_radius_m * theta;
+}
+
+inline double heading_gc(const location& l1, const location& l2) {
+    // Convert degrees to radians
+    double lat1 = to_radians(l1.lat);
+    double lon1 = to_radians(l1.lon);
+    double lat2 = to_radians(l2.lat);
+    double lon2 = to_radians(l2.lon);   
+        
+    double dlon = lon2 - lon1;
+    double X = cos(lat2) * sin(dlon);
+    double Y = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon);
+    
+    double heading = atan2(X,Y);
+    
+    // We want heading in degrees, not radians.
+    heading = to_degrees(heading);
+  
+    // We want a uniform heading of >=0 and <360
+    if (heading < 0)
+        heading = 360.0 + heading;
+    
+    return heading;
 }
 
 }   // namespace
