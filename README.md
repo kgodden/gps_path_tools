@@ -35,5 +35,20 @@ This is currently a work in progress, the currently implemented functions are:
 + ```distance_gc()``` - Calculates the 'Great Circle' distance between two GPS locations.
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
 
+# Types
+
++ location - a POD struct that holds latitude and longitude.
+
+```cpp
+struct location {
+    // Note that it is assumed that latitude and
+    // longitude are always provided as decimal
+    // degrees.
+    
+    double lat;
+    double lon;
+};
+```
+
 # Tests
 There are some tests in the test directory, to compile and run them run **make** and then execute **./test_gps_path_tools**
