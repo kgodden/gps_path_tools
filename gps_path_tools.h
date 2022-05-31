@@ -18,11 +18,20 @@
 
 #include <math.h>
 #include <chrono>
+#include <vector>
 
 
 namespace gps_path_tools {
 
+//
+//-------------- Constants -------------- 
+//
+
 static constexpr double geoid_radius_m = 6371009;   // The mean radius of the Geoid in metres
+
+//
+//-------------- Types -------------- 
+//
 
 struct location {
     // Note that it is assumed that latitude and
@@ -32,6 +41,18 @@ struct location {
     double lat;
     double lon;
 };
+
+// Represents a point on a path or sequence of GPS locations.
+struct path_point {
+    location loc;
+    std::chrono::time_point<std::chrono::system_clock> timestamp;
+};
+
+typedef std::vector<path_point> path;
+
+//
+//-------------- Conversions -------------- 
+//
 
 inline double to_radians(const double theta) {
     return (theta * M_PI) / 180.0;
@@ -52,6 +73,7 @@ inline double ddm_to_dd(const double ddm) {
     return decimal_degrees;
 }
 
+
 // Calculates the haversine of the passed angle
 inline double hav(const double theta) {
     const double s = sin(theta / 2.0);
@@ -70,6 +92,12 @@ inline double dd_to_ddm(const double dd) {
     double minutes = (dd - whole_degrees) * 60.0;
     return whole_degrees * 100.0 + minutes;
 }
+
+
+//
+//-------------- Path Part Functions -------------- 
+//
+
 //
 // Calculates great circle distance in metres
 //  
@@ -152,5 +180,29 @@ inline double heading(const location& l1, const location& l2) {
     
     return h;
 }
+
+//
+//-------------- Path Functions -------------- 
+//
+
+inline double path_distance(const path::iterator start_it, const path::iterator end_it) {
+    
+    double dist = 0.0;
+    
+    if (start_it == end_it)
+        return 0.0;
+    
+    auto end = std::prev(end_it);
+    
+    if (end == start_it)
+        return 0.0;
+    
+    for (auto i = start_it; i != end; ++i) {
+        dist += distance(i->loc, (i + 1)->loc);
+    }
+    
+    return dist;
+}    
+
 
 }   // namespace

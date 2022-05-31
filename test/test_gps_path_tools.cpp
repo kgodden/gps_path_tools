@@ -161,7 +161,7 @@ static bool test_distance_vec() {
 static bool test_distance() {
     auto passed = true;
     
-    std::cout << "Testing distance" << std::endl;
+    std::cout << "Testing distance()" << std::endl;
     
     std::vector<test_locations> test_points = {
         { { 52.9827588546699, -6.040081945988319 }, { 52.9827588546699, -6.040081945988319 }, 0, 1 },
@@ -206,6 +206,37 @@ static bool test_heading() {
     }
 }
 
+static bool test_path_distance() {
+    auto passed = true;
+    
+    std::cout << "Testing path_distance()" << std::endl;
+    std::vector<path_point> path;
+    
+    // Test empty path
+    auto out = path_distance(path.begin(), path.end());
+    passed &= value_test(out, 0, 0.0000001);
+        
+    // Test invalid path with one point
+    path = {
+        { {52.981935612371615, -6.0326861216896495} },
+    };
+
+    out = path_distance(path.begin(), path.end());
+    passed &= value_test(out, 0, 0.0000001);
+
+    path = {
+        { { 52.9827588546699, -6.040081945988319 } }, 
+        { { 53.057744464984495, -6.040085910508501 } },
+        { { 52.9827588546699, -6.040081945988319 } }, 
+    };
+
+    out = path_distance(path.begin(), path.end());
+    passed &= value_test(out, 8338 * 2, 0.1);
+    
+    return passed;
+}
+
+
 int main() {
 
     auto tests_passed = true;
@@ -217,7 +248,9 @@ int main() {
     tests_passed &= test_distance_vec();
     tests_passed += test_heading();
     tests_passed += test_distance();
+    tests_passed += test_path_distance();
     
+ 
     
     return tests_passed ? 0 : 1;
 }
