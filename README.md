@@ -35,6 +35,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```hav()``` - Calculates the Haversine of an angle in radians.
 + ```ahav()``` - Calculates the inverse Haversine.
 + ```distance()``` - Calculates the Haversine distance betweenwo GPS locations.
++ ```path_distance()``` - Calculates the distance of a path made up of a sequence of GPS locations.
 + ```distance_gc()``` - Calculates the 'Great Circle' distance between two GPS locations using vector normals.
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
 
@@ -51,6 +52,22 @@ struct location {
     double lat;
     double lon;
 };
+```
+
++ path_point - represents a single location on a path of GPS points.
+
+```cpp
+// Represents a point on a path or sequence of GPS locations.
+struct path_point {
+    location loc;
+    std::chrono::time_point<std::chrono::system_clock> timestamp;
+};
+```
+
++ path - A vector of path_points that represents a path.
+
+```cpp
+typedef std::vector<path_point> path;
 ```
 
 # Tests
