@@ -17,11 +17,12 @@
 
 
 #include <math.h>
+#include <chrono>
 
 
 namespace gps_path_tools {
 
-static constexpr double geoid_radius_m = 6378100;   // The radius of the Geoid in metres
+static constexpr double geoid_radius_m = 6371009;   // The mean radius of the Geoid in metres
 
 struct location {
     // Note that it is assumed that latitude and
@@ -59,7 +60,8 @@ inline double dd_to_ddm(const double dd) {
     return whole_degrees * 100.0 + minutes;
 }
 //
-//
+// Calculates great circle distance in metres
+//  
 inline double distance_gc(const location& l1, const location& l2) {
     // Convert degrees to radians
     double lat1 = to_radians(l1.lat);
@@ -90,6 +92,13 @@ inline double distance_gc(const location& l1, const location& l2) {
     
     // Distance in Metres
     return geoid_radius_m * theta;
+}
+
+// Calculates speed in metres/s
+//
+inline double speed_gc(const location& l1, const location& l2, const double seconds) {
+    const auto distance = distance_gc(l1, l2);
+    return distance / seconds;
 }
 
 inline double heading_gc(const location& l1, const location& l2) {

@@ -147,6 +147,7 @@ static bool test_distance_gc() {
         { { 52.983, -6.03843 }, {52.98277, -6.03927}, 62, 10 },
         { {52.98277, -6.03927}, { 52.983, -6.03843 }, 62, 10 },
         { {-73.08967, -72.2826}, { -74.84766, -61.60389 }, 381000, 500 },
+//            { { 54.044476 -7.378181 } , {54.044479 -7.378173 }, 3, 1},
     };
     
     for (const auto& test_point: test_points) {
@@ -159,6 +160,8 @@ static bool test_distance_gc() {
 
 static bool test_heading_gc() {
     auto passed = true;
+
+    std::cout << "Testing heading_gc()" << std::endl;
 
     // Setup a list of test points
     std::vector<test_locations> test_points{
