@@ -17,7 +17,7 @@ using namespace gps_path_tools;
   
 int main() {
   // calculate the great circle distance between two lat/lon locations
-  double distance = distance_gc({ 52.98277, -6.03927 }, {52.98344, -6.03646 });
+  double dist = distance({ 52.98277, -6.03927 }, {52.98344, -6.03646 });
   
   // etc...
 }
@@ -32,7 +32,10 @@ This is currently a work in progress, the currently implemented functions are:
 + ```to_degrees()``` - Converts from radians to degrees.
 + ```ddm_to_dd()``` - Converts from Decimal Degrees and Decimal Minutes (ddm) to Decimal Degrees (dd).
 + ```dd_to_ddm()``` - Converts from Decimal Degrees (dd) to Decimal Degrees and Decimal Minutes (ddm).
-+ ```distance_gc()``` - Calculates the 'Great Circle' distance between two GPS locations.
++ ```hav()``` - Calculates the Haversine of an angle in radians.
++ ```ahav()``` - Calculates the inverse Haversine.
++ ```distance()``` - Calculates the Haversine distance betweenwo GPS locations.
++ ```distance_gc()``` - Calculates the 'Great Circle' distance between two GPS locations using vector normals.
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
 
 # Types
