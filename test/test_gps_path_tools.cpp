@@ -135,10 +135,10 @@ static bool test_dd_to_ddm() {
     return passed;
 }
 
-static bool test_distance_gc() {
+static bool test_distance_vec() {
     auto passed = true;
     
-    std::cout << "Testing distance_gc()" << std::endl;
+    std::cout << "Testing distance_vec()" << std::endl;
     
     std::vector<test_locations> test_points = {
         { { 52.9827588546699, -6.040081945988319 }, { 52.9827588546699, -6.040081945988319 }, 0, 1 },
@@ -151,17 +151,41 @@ static bool test_distance_gc() {
     };
     
     for (const auto& test_point: test_points) {
-        auto out = distance_gc(test_point.a, test_point.b);
+        auto out = distance_vec(test_point.a, test_point.b);
         passed &= value_test(out, test_point.target, test_point.allowable_delta);
     }
     
     return passed;
 }
 
-static bool test_heading_gc() {
+static bool test_distance() {
+    auto passed = true;
+    
+    std::cout << "Testing distance" << std::endl;
+    
+    std::vector<test_locations> test_points = {
+        { { 52.9827588546699, -6.040081945988319 }, { 52.9827588546699, -6.040081945988319 }, 0, 1 },
+        { { 52.9827588546699, -6.040081945988319 }, { 53.057744464984495, -6.040085910508501}, 8338, 10 },
+        { { 52.98277, -6.03927 }, {52.98344, -6.03646}, 202, 10 },
+        { { 52.983, -6.03843 }, {52.98277, -6.03927}, 62, 10 },
+        { {52.98277, -6.03927}, { 52.983, -6.03843 }, 62, 10 },
+        { {-73.08967, -72.2826}, { -74.84766, -61.60389 }, 381000, 500 },
+//            { { 54.044476 -7.378181 } , {54.044479 -7.378173 }, 3, 1},
+    };
+    
+    for (const auto& test_point: test_points) {
+        auto out = distance(test_point.a, test_point.b);
+        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+    }
+    
+    return passed;
+}
+
+
+static bool test_heading() {
     auto passed = true;
 
-    std::cout << "Testing heading_gc()" << std::endl;
+    std::cout << "Testing heading()" << std::endl;
 
     // Setup a list of test points
     std::vector<test_locations> test_points{
@@ -177,8 +201,8 @@ static bool test_heading_gc() {
     
     // Loop through each test point.
     for (const auto& test_point: test_points) {
-        auto heading = heading_gc(test_point.a, test_point.b);
-        passed &= value_test(heading, test_point.target, test_point.allowable_delta);
+        auto h = heading(test_point.a, test_point.b);
+        passed &= value_test(h, test_point.target, test_point.allowable_delta);
     }
 }
 
@@ -190,8 +214,9 @@ int main() {
     tests_passed &= test_to_degrees();
     tests_passed &= test_ddm_to_dd();
     tests_passed &= test_dd_to_ddm();
-    tests_passed &= test_distance_gc();
-    tests_passed += test_heading_gc();
+    tests_passed &= test_distance_vec();
+    tests_passed += test_heading();
+    tests_passed += test_distance();
     
     
     return tests_passed ? 0 : 1;

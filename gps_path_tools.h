@@ -52,6 +52,17 @@ inline double ddm_to_dd(const double ddm) {
     return decimal_degrees;
 }
 
+// Calculates the haversine of the passed angle
+inline double hav(const double theta) {
+    const double s = sin(theta / 2.0);
+    return s * s;
+}
+
+// Calculates the inverse haversine of h
+inline double ahav(const double h) {
+    return 2.0 * asin(sqrt(h));
+}
+
 // Converts a decimal degrees value 
 // into decimal degrees and decimal minutes.
 inline double dd_to_ddm(const double dd) {
@@ -62,7 +73,7 @@ inline double dd_to_ddm(const double dd) {
 //
 // Calculates great circle distance in metres
 //  
-inline double distance_gc(const location& l1, const location& l2) {
+inline double distance_vec(const location& l1, const location& l2) {
     // Convert degrees to radians
     double lat1 = to_radians(l1.lat);
     double lon1 = to_radians(l1.lon);
@@ -94,14 +105,32 @@ inline double distance_gc(const location& l1, const location& l2) {
     return geoid_radius_m * theta;
 }
 
-// Calculates speed in metres/s
-//
-inline double speed_gc(const location& l1, const location& l2, const double seconds) {
-    const auto distance = distance_gc(l1, l2);
-    return distance / seconds;
+inline double distance(const location& l1, const location& l2) {
+    // Calculates the haversine distance between the two points
+    // see these pages for a nice background to haversine:
+    // https://plus.maths.org/content/lost-lovely-haversine
+    // https://www.movable-type.co.uk/scripts/latlong.html
+    
+    // Convert degrees to radians
+    double lat1 = to_radians(l1.lat);
+    double lon1 = to_radians(l1.lon);
+    double lat2 = to_radians(l2.lat);
+    double lon2 = to_radians(l2.lon);
+
+    double dlat = lat2 - lat1;
+    double dlon = lon2 - lon1;
+    
+    return geoid_radius_m * ahav(hav(dlat) + cos(lat1) * cos(lat2) * hav(dlon));
 }
 
-inline double heading_gc(const location& l1, const location& l2) {
+// Calculates speed in metres/s
+//
+inline double speed(const location& l1, const location& l2, const double seconds) {
+    const auto dist = distance(l1, l2);
+    return dist / seconds;
+}
+
+inline double heading(const location& l1, const location& l2) {
     // Convert degrees to radians
     double lat1 = to_radians(l1.lat);
     double lon1 = to_radians(l1.lon);
@@ -112,16 +141,16 @@ inline double heading_gc(const location& l1, const location& l2) {
     double X = cos(lat2) * sin(dlon);
     double Y = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon);
     
-    double heading = atan2(X,Y);
+    double h = atan2(X,Y);
     
     // We want heading in degrees, not radians.
-    heading = to_degrees(heading);
+    h = to_degrees(h);
   
     // We want a uniform heading of >=0 and <360
-    if (heading < 0)
-        heading = 360.0 + heading;
+    if (h < 0)
+        h = 360.0 + h;
     
-    return heading;
+    return h;
 }
 
 }   // namespace
