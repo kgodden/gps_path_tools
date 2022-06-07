@@ -33,6 +33,8 @@ static constexpr double geoid_radius_m = 6371009;   // The mean radius of the Ge
 //-------------- Types -------------- 
 //
 
+typedef std::chrono::time_point<std::chrono::system_clock> path_time;
+
 struct location {
     // Note that it is assumed that latitude and
     // longitude are always provided as decimal
@@ -45,7 +47,7 @@ struct location {
 // Represents a point on a path or sequence of GPS locations.
 struct path_point {
     location loc;
-    std::chrono::time_point<std::chrono::system_clock> timestamp;
+    path_time timestamp;
 };
 
 typedef std::vector<path_point> path;
@@ -73,6 +75,16 @@ inline double ddm_to_dd(const double ddm) {
     return decimal_degrees;
 }
 
+// Convert from metres per second to kilometres
+// per hour.
+inline double mps_to_kph(const double mps) {
+    return mps * 3.6;
+}
+    
+// Convert from kilometres per hour to metres per second
+inline double kph_to_mps(const double kph) {
+    return kph / 3.6;
+}
 
 // Calculates the haversine of the passed angle
 inline double hav(const double theta) {
@@ -189,14 +201,21 @@ inline double path_distance(const path::iterator start_it, const path::iterator 
     
     double dist = 0.0;
     
+    // If the sequence is empty, return 0
     if (start_it == end_it)
-        return 0.0;
-    
+        return dist;
+
+    // iterator that is one past second last point.
     auto end = std::prev(end_it);
     
+    // If the sequence only has one location,
+    // return 0
     if (end == start_it)
-        return 0.0;
+        return dist;
     
+    // Loop through from start to the second last
+    // point accumulating the distances between
+    // the point pairs.
     for (auto i = start_it; i != end; ++i) {
         dist += distance(i->loc, (i + 1)->loc);
     }
@@ -204,5 +223,46 @@ inline double path_distance(const path::iterator start_it, const path::iterator 
     return dist;
 }    
 
+path::iterator find_closest_path_point_time(const path::iterator start_it, const path::iterator end_it, path_time target_timestamp) {
+
+    // Check for empty/bad range
+    if (start_it == end_it)
+        return end_it;
+
+    auto closest = start_it;
+    auto smallest_time_delta = start_it->timestamp - target_timestamp;
+    
+    for (auto i = start_it; i != end_it; ++i) {
+        const auto delta = start_it->timestamp - target_timestamp;
+        
+        if (delta < smallest_time_delta) {
+            smallest_time_delta = delta;
+            closest = i;
+        }
+    }
+    
+    return closest;
+}
+
+path::iterator find_closest_path_point_dist(const path::iterator start_it, const path::iterator end_it, const location& target) {
+    
+    // Check for empty/bad range
+    if (start_it == end_it)
+        return end_it;
+    
+    auto closest = start_it;
+    auto smallest_delta = distance(start_it->loc, target);
+    
+    for (auto i = start_it; i != end_it; ++i) {
+        const auto delta = distance(i->loc, target);;
+        
+        if (delta < smallest_delta) {
+            smallest_delta = delta;
+            closest = i;
+        }
+    }
+    
+    return closest;
+}
 
 }   // namespace

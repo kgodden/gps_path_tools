@@ -41,6 +41,20 @@ static bool value_test(double value, double target, double allowable_delta) {
         return pass;
 }
 
+static bool iterator_test(const path::iterator value, path::iterator target, path::iterator begin) {
+        auto pass = value == target;
+
+        if (pass) {
+            std::cout << "PASS";
+        } else {
+            std::cout << "FAIL";
+        }
+        
+        std::cout << ", got: " << std::distance(begin, value) << ", target: " << std::distance(begin, value) << std::endl;
+        
+        return pass;
+}
+
 static bool test_to_radians() {
     auto passed = true;
     
@@ -236,6 +250,45 @@ static bool test_path_distance() {
     return passed;
 }
 
+static bool test_find_closest_path_point_dist() {
+    auto passed = true;
+
+    std::cout << "Testing path_distance()" << std::endl;
+    std::vector<path_point> path;
+
+    location target {52.988201, -6.413192};
+    
+    // Test empty path
+    auto out = find_closest_path_point_dist(path.begin(), path.end(), target);
+    passed &= iterator_test(out, path.end(), path.begin());
+    
+    path = {
+        { { 52.988201, -6.413192 } }, 
+        { { 52.988222, -6.413189 } }, 
+        { { 52.98821, -6.413156 } }, 
+        { { 52.988189, -6.413176 } }, 
+        { { 52.988171, -6.413184 } }, 
+        { { 52.988148, -6.413189 } }, 
+        { { 52.988109, -6.413218 } }, 
+    };
+
+    out = find_closest_path_point_dist(path.begin(), path.end(), target);
+    passed &= iterator_test(out, path.begin() + 0, path.begin());
+
+    target = {52.988189, -6.413176};
+    out = find_closest_path_point_dist(path.begin(), path.end(), target);
+    passed &= iterator_test(out, path.begin() + 3, path.begin());
+
+    target = {52.988179, -6.413166};
+    out = find_closest_path_point_dist(path.begin(), path.end(), target);
+    passed &= iterator_test(out, path.begin() + 3, path.begin());
+
+    // last pos
+    target = { 52.988119, -6.413208 };
+    out = find_closest_path_point_dist(path.begin(), path.end(), target);
+    passed &= iterator_test(out, path.begin() + 6, path.begin());
+
+}
 
 int main() {
 
@@ -249,6 +302,7 @@ int main() {
     tests_passed += test_heading();
     tests_passed += test_distance();
     tests_passed += test_path_distance();
+    tests_passed += test_find_closest_path_point_dist();
     
  
     
