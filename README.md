@@ -38,6 +38,8 @@ This is currently a work in progress, the currently implemented functions are:
 + ```path_distance()``` - Calculates the distance of a path made up of a sequence of GPS locations.
 + ```distance_gc()``` - Calculates the 'Great Circle' distance between two GPS locations using vector normals.
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
++ ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
++ ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
 
 # Types
 
