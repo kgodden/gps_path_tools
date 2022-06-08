@@ -1,6 +1,8 @@
 # gps_path_tools
 A collection of C++ tools & functions for working with GPS path data, calculating distance, speed and heading etc.
 
+**Warning - Work In Progress**
+
 This is intended to be a fairly simple collection of functions to help working with GPS coordinates, positions and paths, its main aims are:
 
 + Provide some useful & simple tools for working with GPS positions and Paths for solving everyday problems.
@@ -40,6 +42,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
 + ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
 + ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
++ ```load_gpx_qd()``` - Loads a sequence of GPS locations in a GPX file into a GPS path - Quick and Dirty, very limited/work in progress.
 
 # Types
 
