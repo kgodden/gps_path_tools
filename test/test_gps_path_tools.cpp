@@ -41,6 +41,20 @@ static bool value_test(int value, int target) {
         return pass;
 }
 
+static bool value_test(const std::string& value, const std::string& target) {
+        auto pass = value == target;
+
+        if (pass) {
+            std::cout << "PASS";
+        } else {
+            std::cout << "FAIL";
+        }
+        
+        std::cout << ", got: " << value << ", target: " << target << std::endl;
+        
+        return pass;
+}
+
 static bool value_test(double value, double target, double allowable_delta) {
         auto pass = almost_equal(value, target, allowable_delta);
 
@@ -313,12 +327,33 @@ static bool test_load_gpx_qd() {
     passed &= value_test((int)path.size(), 6115);
     
     auto out = path_distance(path.begin(), path.end());
-    passed &= value_test(out, 16964, 1.0);
-    
-    
-    
+    passed &= value_test(out, 16964, 1.0);  // 16.9Km
+        
     return passed;
 }
+
+static bool test_cardinal_direction() {
+    auto passed = true;
+
+    std::cout << "Testing cardinal_direction()" << std::endl;
+
+    passed &= value_test(cardinal_direction(1.0), "N");
+    passed &= value_test(cardinal_direction(45.0), "NE");
+    passed &= value_test(cardinal_direction(90.0), "E");
+    passed &= value_test(cardinal_direction(134.0), "SE");
+    passed &= value_test(cardinal_direction(180.0), "S");
+    passed &= value_test(cardinal_direction(215.0), "SW");
+    passed &= value_test(cardinal_direction(269.0), "W");
+    passed &= value_test(cardinal_direction(316.0), "NW");
+    passed &= value_test(cardinal_direction(324.0), "NW");
+    passed &= value_test(cardinal_direction(350.0), "N");
+    passed &= value_test(cardinal_direction(359.0), "N");
+    passed &= value_test(cardinal_direction(360.0), "N");
+    passed &= value_test(cardinal_direction(-20.0), "N");
+            
+    return passed;
+}
+
 
 int main() {
 
@@ -334,6 +369,7 @@ int main() {
     tests_passed += test_path_distance();
     tests_passed += test_find_closest_path_point_dist();
     tests_passed += test_load_gpx_qd();
+    tests_passed += test_cardinal_direction();
     
  
     

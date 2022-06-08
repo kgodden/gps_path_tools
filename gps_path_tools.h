@@ -106,7 +106,46 @@ inline double dd_to_ddm(const double dd) {
     return whole_degrees * 100.0 + minutes;
 }
 
+// Estimates the cardinal direction from the passed bearing
+// Heading to be passed in degrees
+inline const char* cardinal_direction(double bearing) {
 
+    static const struct {
+        
+        double angle;
+        const char* name;
+        
+    } cardinals[] = {
+        {0.0, "N"},
+        {45.0, "NE"},
+        {90.0, "E"},
+        {135.0, "SE"},
+        {190.0, "S"},
+        {225.0, "SW"},
+        {270.0, "W"},
+        {315.0, "NW"},
+        {360.0, "N"},
+    };
+
+    bearing = fmod(bearing, 360.0);
+    
+    if (bearing < 0.0)
+        bearing += 360;
+    
+    int closest_index = 0;
+    int closest_delta = fabs(cardinals[0].angle - bearing);
+    
+    for (int i = 0; i != 9; ++i) {
+        int delta = fabs(cardinals[i].angle - bearing);
+        
+        if (delta < closest_delta) {
+                closest_delta = delta;
+                closest_index = i;
+        }
+    }
+    
+    return cardinals[closest_index].name;
+}
 //
 //-------------- Path Part Functions -------------- 
 //
