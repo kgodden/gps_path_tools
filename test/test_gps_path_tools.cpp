@@ -27,6 +27,20 @@ struct test_locations {
     double allowable_delta;
 };
 
+static bool value_test(int value, int target) {
+        auto pass = value == target;
+
+        if (pass) {
+            std::cout << "PASS";
+        } else {
+            std::cout << "FAIL";
+        }
+        
+        std::cout << ", got: " << value << ", target: " << target << ", delta: " << (target - value )<< std::endl;
+        
+        return pass;
+}
+
 static bool value_test(double value, double target, double allowable_delta) {
         auto pass = almost_equal(value, target, allowable_delta);
 
@@ -253,7 +267,7 @@ static bool test_path_distance() {
 static bool test_find_closest_path_point_dist() {
     auto passed = true;
 
-    std::cout << "Testing path_distance()" << std::endl;
+    std::cout << "Testing find_closest_path_point_dist()" << std::endl;
     std::vector<path_point> path;
 
     location target {52.988201, -6.413192};
@@ -290,6 +304,22 @@ static bool test_find_closest_path_point_dist() {
 
 }
 
+static bool test_load_gpx_qd() {
+    auto passed = true;
+
+    std::cout << "Testing load_gpx_qd()" << std::endl;
+
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    passed &= value_test((int)path.size(), 6115);
+    
+    auto out = path_distance(path.begin(), path.end());
+    passed &= value_test(out, 16964, 1.0);
+    
+    
+    
+    return passed;
+}
+
 int main() {
 
     auto tests_passed = true;
@@ -303,6 +333,7 @@ int main() {
     tests_passed += test_distance();
     tests_passed += test_path_distance();
     tests_passed += test_find_closest_path_point_dist();
+    tests_passed += test_load_gpx_qd();
     
  
     

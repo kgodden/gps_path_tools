@@ -19,8 +19,9 @@
 #include <math.h>
 #include <chrono>
 #include <vector>
-
-
+#include <fstream>
+#include <regex>
+ 
 namespace gps_path_tools {
 
 //
@@ -217,7 +218,10 @@ inline double path_distance(const path::iterator start_it, const path::iterator 
     // point accumulating the distances between
     // the point pairs.
     for (auto i = start_it; i != end; ++i) {
-        dist += distance(i->loc, (i + 1)->loc);
+        const auto d = distance(i->loc, std::next(i)->loc); 
+
+        if (!isnan(d))
+            dist += d;
     }
     
     return dist;
@@ -265,4 +269,36 @@ path::iterator find_closest_path_point_dist(const path::iterator start_it, const
     return closest;
 }
 
+path load_gpx_qd(const std::string filename) {
+    path out;
+    
+    std::ifstream fs(filename);
+    
+    if (!fs)
+        return out;
+
+    std::string line;
+
+    try {
+    static const std::regex regexp(R"(lat\s*\=\s*\"([-+0-9\.]+)\" lon\s*=\s*\"([-+0-9\.]+)\")"); 
+    while (getline(fs, line)) { 
+        auto p = line.find("lat");
+        
+        if (p != std::string::npos) {
+            std::smatch match;
+
+            if (std::regex_search(line, match, regexp)) {
+                double lat = atof(match[1].str().c_str());
+                double lon = atof(match[2].str().c_str());
+                out.push_back({ {lat, lon }});
+            }
+        }
+    }
+
+    } catch (const std::regex_error& ex) {
+        printf("ex: %s %d\n", ex.what(), ex.code()); 
+    }
+    
+    return out;
+}
 }   // namespace
