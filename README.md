@@ -34,6 +34,8 @@ This is currently a work in progress, the currently implemented functions are:
 + ```to_degrees()``` - Converts from radians to degrees.
 + ```ddm_to_dd()``` - Converts from Decimal Degrees and Decimal Minutes (ddm) to Decimal Degrees (dd).
 + ```dd_to_ddm()``` - Converts from Decimal Degrees (dd) to Decimal Degrees and Decimal Minutes (ddm).
++ ```str_to_time_utc()``` - Converts a UTC date/time string with optional fractional seconds in ISO8601 format (e.g. 2022-05-07T15:43:15.000001Z) to a time value (std::time_point). 
++ ```time_to_str_utc()``` - Converts a UTC time (std::time_point) to a string in ISO8601 format with fractional seconds. 
 + ```cardinal_direction()``` - Estimates the 'closest' cardinal direction to the passed bearing and returns it as a string ("N", "SW" etc.)
 + ```hav()``` - Calculates the Haversine of an angle in radians.
 + ```ahav()``` - Calculates the inverse Haversine.
