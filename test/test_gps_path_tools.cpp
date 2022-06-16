@@ -177,6 +177,33 @@ static bool test_dd_to_ddm() {
     return passed;
 }
 
+static bool test_str_to_time_utc() {
+    auto passed = true;
+    
+    std::cout << "Testing str_to_time_utc()" << std::endl;
+    
+    std::vector<std::pair<const char*, const char*>> tests = {
+        { "2022-05-07T15:43:15.999999Z", "2022-05-07T15:43:15.999999Z" },
+        { "2022-05-07T15:43:15.000000Z", "2022-05-07T15:43:15.000000Z" },
+        { "2022-05-07T15:43:15.000001Z", "2022-05-07T15:43:15.000001Z" },
+        { "2022-05-07T15:43:15.001Z", "2022-05-07T15:43:15.001000Z" },
+        { "2022-05-07T15:43:15Z", "2022-05-07T15:43:15.000000Z" },
+        { "2022-05-07T15:43:15.100015", "2022-05-07T15:43:15.100015Z" },
+    };
+    
+    for (const auto& test : tests) {
+        auto time = str_to_time_utc(test.first);
+        auto out = time_to_str_utc(time);
+        
+        passed &= value_test(out, test.second);   
+    }
+    
+       
+    return passed;
+}
+
+
+
 static bool test_distance_vec() {
     auto passed = true;
     
@@ -278,6 +305,37 @@ static bool test_path_distance() {
     return passed;
 }
 
+static bool test_path_heading() {
+    auto passed = true;
+
+    std::cout << "Testing path_heading()" << std::endl;
+
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    passed &= value_test((int)path.size(), 6115);
+    
+    auto out = path_heading(path.begin(), path.end());
+    passed &= value_test(out.size(), 6114);
+    
+    out = smooth(out.begin(), out.end());
+    out = smooth(out.begin(), out.end());
+    out = smooth(out.begin(), out.end());
+    out = smooth(out.begin(), out.end());
+    
+    for (const auto i : out) {
+       // std::cout << i << std::endl;
+    }
+    
+    //out = first_central_difference(out.begin(), out.end());
+
+    for (const auto i : out) {
+      //  std::cout << i << std::endl;
+    }
+    
+    
+    return passed;
+}
+
+
 static bool test_find_closest_path_point_dist() {
     auto passed = true;
 
@@ -363,10 +421,13 @@ int main() {
     tests_passed &= test_to_degrees();
     tests_passed &= test_ddm_to_dd();
     tests_passed &= test_dd_to_ddm();
+    tests_passed &= test_str_to_time_utc();
+    return 0;
     tests_passed &= test_distance_vec();
     tests_passed += test_heading();
     tests_passed += test_distance();
     tests_passed += test_path_distance();
+    tests_passed += test_path_heading();
     tests_passed += test_find_closest_path_point_dist();
     tests_passed += test_load_gpx_qd();
     tests_passed += test_cardinal_direction();

@@ -18,6 +18,7 @@
 
 #include <math.h>
 #include <chrono>
+#include <time.h>
 #include <vector>
 #include <fstream>
 #include <regex>
@@ -81,11 +82,100 @@ inline double ddm_to_dd(const double ddm) {
 inline double mps_to_kph(const double mps) {
     return mps * 3.6;
 }
+   
+#ifndef timegm
+// use _mkgmtime() on windows
+#define timegm _mkgmtime
+#endif
+
+#ifndef _mkgmtime
+
+// Algorithm: http://howardhinnant.github.io/date_algorithms.html
+namespace internal {
     
+    inline int days_from_epoch(int y, int m, int d)
+    {
+        y -= m <= 2;
+        int era = y / 400;
+        int yoe = y - era * 400;                                   // [0, 399]
+        int doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;  // [0, 365]
+        int doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;           // [0, 146096]
+        return era * 146097 + doe - 719468;
+    }
+
+    // It  does not modify broken-down time
+    inline time_t timegm(struct tm const* t)     
+    {
+        int year = t->tm_year + 1900;
+        int month = t->tm_mon;          // 0-11
+        if (month > 11)
+        {
+            year += month / 12;
+            month %= 12;
+        }
+        else if (month < 0)
+        {
+            int years_diff = (11 - month) / 12;
+            year -= years_diff;
+            month += 12 * years_diff;
+        }
+        int days_since_epoch = days_from_epoch(year, month + 1, t->tm_mday);
+
+        return 60 * (60 * (24L * days_since_epoch + t->tm_hour) + t->tm_min) + t->tm_sec;
+    }
+}
+
+#endif
 // Convert from kilometres per hour to metres per second
 inline double kph_to_mps(const double kph) {
     return kph / 3.6;
 }
+
+inline path_time str_to_time_utc(const std::string& time_str) {
+    std::stringstream in(time_str);
+
+
+    std::tm tm{};
+    
+    // e.g. 2022-05-07T15:43:15.000Z
+    in >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%S");
+    
+    time_t t = internal::timegm(&tm);
+
+    std::cout << t << std::endl;
+      
+    auto time = std::chrono::system_clock::from_time_t(t);
+
+    double us = 0.0;
+    
+    sscanf(time_str.c_str() + 19, "%lf", &us);
+    
+    time += std::chrono::microseconds((unsigned int)((us + 0.0000005) * 1E6));
+    
+    return time;
+}
+
+inline std::string time_to_str_utc(const path_time time) {
+	// convert to time_t which will represent the number of
+	// seconds since the UNIX epoch, UTC 00:00:00 Thursday, 1st. January 1970
+	auto epoch_seconds = std::chrono::system_clock::to_time_t(time);
+	// Format this as date time to seconds resolution
+	// e.g. 2016-08-30T08:18:51
+	std::stringstream stream;
+	stream << std::put_time(gmtime(&epoch_seconds), "%Y-%m-%dT%H:%M:%S");
+	// If we now convert back to a time_point we will get the time truncated
+	// to whole seconds 
+	auto truncated = std::chrono::system_clock::from_time_t(epoch_seconds);
+	// Now we subtract this seconds count from the original time to
+	// get the number of extra microseconds..
+	auto delta_us = std::chrono::duration_cast<std::chrono::microseconds>(time - truncated).count();
+	// And append this to the output stream as fractional seconds
+	// e.g. 2016-08-30T08:18:51.867479
+	stream << "." << std::fixed << std::setw(6) << std::setfill('0') << delta_us << "Z";
+	return stream.str();
+}
+
+
 
 // Calculates the haversine of the passed angle
 inline double hav(const double theta) {
@@ -266,7 +356,31 @@ inline double path_distance(const path::iterator start_it, const path::iterator 
     return dist;
 }    
 
-path::iterator find_closest_path_point_time(const path::iterator start_it, const path::iterator end_it, path_time target_timestamp) {
+inline std::vector<double> path_heading(const path::iterator start_it, const path::iterator end_it) {
+        
+    if (std::distance(start_it, end_it) < 2)
+        return {};
+    
+
+    // iterator that is one past second last point.
+    auto end = std::prev(end_it);
+        
+    std::vector<double> out;
+    out.reserve(std::distance(start_it, end));
+    
+    // Loop through from start to the second last
+    // point accumulating the heading between
+    // the point pairs.
+    for (auto i = start_it; i != end; ++i) {
+        const auto h = heading(i->loc, std::next(i)->loc); 
+
+        out.push_back(h);
+    }
+    
+    return out;
+}    
+
+inline path::iterator find_closest_path_point_time(const path::iterator start_it, const path::iterator end_it, path_time target_timestamp) {
 
     // Check for empty/bad range
     if (start_it == end_it)
@@ -287,7 +401,7 @@ path::iterator find_closest_path_point_time(const path::iterator start_it, const
     return closest;
 }
 
-path::iterator find_closest_path_point_dist(const path::iterator start_it, const path::iterator end_it, const location& target) {
+inline path::iterator find_closest_path_point_dist(const path::iterator start_it, const path::iterator end_it, const location& target) {
     
     // Check for empty/bad range
     if (start_it == end_it)
@@ -308,7 +422,58 @@ path::iterator find_closest_path_point_dist(const path::iterator start_it, const
     return closest;
 }
 
-path load_gpx_qd(const std::string filename) {
+//
+//-------------- Helper Functions -------------- 
+//
+
+inline std::vector<double> smooth(const std::vector<double>::iterator start_it, const std::vector<double>::iterator end_it) {
+    if (std::distance(start_it, end_it) < 3)
+        return {};
+        
+    std::vector<double> out;
+    out.reserve(std::distance(start_it, end_it) - 2);
+    
+    for (auto i = start_it; i != std::prev(end_it); ++i) {
+            // Use [ 1, 2, 1 ] kernel
+            out.push_back((*std::prev(i) + 2.0 * *i + *std::next(i)) / 4.0);
+    }
+
+    return out;
+}
+
+inline std::vector<double> first_forward_difference(const std::vector<double>::iterator start_it, const std::vector<double>::iterator end_it) {
+    if (std::distance(start_it, end_it) < 3)
+        return {};
+        
+    std::vector<double> out;
+    out.reserve(std::distance(start_it, end_it) - 2);
+    
+    for (auto i = start_it; i != std::prev(end_it); ++i) {
+            out.push_back(*std::next(i) - *std::prev(i));
+    }
+
+    return out;
+}
+
+inline std::vector<double> first_central_difference(const std::vector<double>::iterator start_it, const std::vector<double>::iterator end_it) {
+    if (std::distance(start_it, end_it) < 3)
+        return {};
+        
+    std::vector<double> out;
+    out.reserve(std::distance(start_it, end_it) - 2);
+    
+    for (auto i = std::next(start_it); i != std::prev(end_it); ++i) {
+            out.push_back((*std::next(i) - *std::prev(i)) / 2.0);
+    }
+
+    return out;
+}
+
+//
+//-------------- I/O Functions -------------- 
+//
+
+inline path load_gpx_qd(const std::string filename) {
     path out;
     
     std::ifstream fs(filename);
