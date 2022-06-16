@@ -1,5 +1,5 @@
 # gps_path_tools
-A collection of C++ tools & functions for working with GPS path data, calculating distance, speed and heading etc.
+GPS Path Tools code - A collection of C++ tools & functions for working with GPS path data, calculating distance, speed and heading etc.
 
 **Warning - Work In Progress**
 
