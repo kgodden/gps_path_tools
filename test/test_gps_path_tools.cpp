@@ -305,6 +305,29 @@ static bool test_path_distance() {
     return passed;
 }
 
+static bool test_path_cumulative_distance() {
+    auto passed = true;
+    
+    std::cout << "Testing path_cumulative_distance()" << std::endl;
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+
+    auto cdist = path_cumulative_distance(path.begin(), path.end());
+    auto speed = path_speed(path.begin(), path.end());
+    speed = smooth(speed.begin(), speed.end());
+    speed = smooth(speed.begin(), speed.end());
+    
+    std::ofstream file("./it.csv");
+    
+    int i = 0;
+    
+    for (const auto& d : cdist) {
+        file << time_to_str_utc(d.timestamp) << "," << time_to_us(d.timestamp) << ", " << d.value << "," << speed[i++].value << std::endl;
+    }
+    
+    return passed;
+}
+
+
 static bool test_path_heading() {
     auto passed = true;
 
@@ -390,6 +413,31 @@ static bool test_load_gpx_qd() {
     return passed;
 }
 
+static bool test_save_gpx_qd() {
+    auto passed = true;
+
+    std::cout << "Testing save_gpx_qd()" << std::endl;
+
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+
+    save_gpx_qd("test.gpx", path.begin(), path.end());
+        
+    return passed;
+}
+
+static bool test_load_csv_qd() {
+    auto passed = true;
+
+    std::cout << "Testing load_csv_qd()" << std::endl;
+
+    auto path = load_csv_qd("pass4_gps_track_log_24_08_2022.csv");
+
+    save_gpx_qd("test_gps_log.gpx", path.begin()+60, path.end());
+        
+    return passed;
+}
+
+
 static bool test_cardinal_direction() {
     auto passed = true;
 
@@ -422,17 +470,17 @@ int main() {
     tests_passed &= test_ddm_to_dd();
     tests_passed &= test_dd_to_ddm();
     tests_passed &= test_str_to_time_utc();
-    return 0;
     tests_passed &= test_distance_vec();
     tests_passed += test_heading();
     tests_passed += test_distance();
     tests_passed += test_path_distance();
+    tests_passed += test_path_cumulative_distance();
     tests_passed += test_path_heading();
     tests_passed += test_find_closest_path_point_dist();
-    tests_passed += test_load_gpx_qd();
     tests_passed += test_cardinal_direction();
-    
- 
+    tests_passed += test_load_gpx_qd();
+    tests_passed += test_save_gpx_qd();
+    tests_passed += test_load_csv_qd();
     
     return tests_passed ? 0 : 1;
 }

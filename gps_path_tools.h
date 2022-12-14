@@ -50,6 +50,14 @@ struct location {
 struct path_point {
     location loc;
     path_time timestamp;
+    int sequence;
+};
+
+// represents a value at some point along 
+// the path such as heading or speed etc.
+struct path_value {
+    double value;
+    path_time timestamp;
 };
 
 typedef std::vector<path_point> path;
@@ -142,7 +150,7 @@ inline path_time str_to_time_utc(const std::string& time_str) {
     
     time_t t = internal::timegm(&tm);
 
-    std::cout << t << std::endl;
+    //std::cout << t << std::endl;
       
     auto time = std::chrono::system_clock::from_time_t(t);
 
@@ -175,7 +183,9 @@ inline std::string time_to_str_utc(const path_time time) {
 	return stream.str();
 }
 
-
+inline long long time_to_us(const path_time time) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(time.time_since_epoch()).count();
+}
 
 // Calculates the haversine of the passed angle
 inline double hav(const double theta) {
@@ -356,7 +366,7 @@ inline double path_distance(const path::iterator start_it, const path::iterator 
     return dist;
 }    
 
-inline std::vector<double> path_heading(const path::iterator start_it, const path::iterator end_it) {
+inline std::vector<path_value> path_heading(const path::iterator start_it, const path::iterator end_it) {
         
     if (std::distance(start_it, end_it) < 2)
         return {};
@@ -365,7 +375,7 @@ inline std::vector<double> path_heading(const path::iterator start_it, const pat
     // iterator that is one past second last point.
     auto end = std::prev(end_it);
         
-    std::vector<double> out;
+    std::vector<path_value> out;
     out.reserve(std::distance(start_it, end));
     
     // Loop through from start to the second last
@@ -374,7 +384,57 @@ inline std::vector<double> path_heading(const path::iterator start_it, const pat
     for (auto i = start_it; i != end; ++i) {
         const auto h = heading(i->loc, std::next(i)->loc); 
 
-        out.push_back(h);
+        out.push_back({ h, i->timestamp });
+    }
+    
+    return out;
+}    
+
+inline std::vector<path_value> path_speed(const path::iterator start_it, const path::iterator end_it) {
+        
+    if (std::distance(start_it, end_it) < 2)
+        return {};
+    
+
+    // iterator that is one past second last point.
+    auto end = std::prev(end_it);
+        
+    std::vector<path_value> out;
+    out.reserve(std::distance(start_it, end));
+    
+    // Loop through from start to the second last
+    // point accumulating the heading between
+    // the point pairs.
+    for (auto i = start_it; i != end; ++i) {
+        const auto h = speed(i->loc, std::next(i)->loc, (double)std::chrono::duration_cast<std::chrono::microseconds>(std::next(i)->timestamp - i->timestamp).count() / 1E6); 
+
+        out.push_back({ h, i->timestamp });
+    }
+    
+    return out;
+}
+inline std::vector<path_value> path_cumulative_distance(const path::iterator start_it, const path::iterator end_it) {
+        
+    if (std::distance(start_it, end_it) < 2)
+        return {};
+    
+
+    // iterator that is one past second last point.
+    auto end = std::prev(end_it);
+        
+    std::vector<path_value> out;
+    out.reserve(std::distance(start_it, end));
+    
+    double dist = 0.0;
+    
+    // Loop through from start to the second last
+    // point accumulating the heading between
+    // the point pairs.
+    for (auto i = start_it; i != end; ++i) {
+        const auto d = distance(i->loc, std::next(i)->loc); 
+        dist += d;
+        
+        out.push_back({ dist, std::next(i)->timestamp });
     }
     
     return out;
@@ -426,44 +486,47 @@ inline path::iterator find_closest_path_point_dist(const path::iterator start_it
 //-------------- Helper Functions -------------- 
 //
 
-inline std::vector<double> smooth(const std::vector<double>::iterator start_it, const std::vector<double>::iterator end_it) {
+inline std::vector<path_value> smooth(const std::vector<path_value>::iterator start_it, const std::vector<path_value>::iterator end_it) {
     if (std::distance(start_it, end_it) < 3)
         return {};
         
-    std::vector<double> out;
+    std::vector<path_value> out;
     out.reserve(std::distance(start_it, end_it) - 2);
     
     for (auto i = start_it; i != std::prev(end_it); ++i) {
             // Use [ 1, 2, 1 ] kernel
-            out.push_back((*std::prev(i) + 2.0 * *i + *std::next(i)) / 4.0);
+            const double val = (std::prev(i)->value + 2.0 * i->value + std::next(i)->value) / 4.0;
+            out.push_back({ val , i->timestamp });
     }
 
     return out;
 }
 
-inline std::vector<double> first_forward_difference(const std::vector<double>::iterator start_it, const std::vector<double>::iterator end_it) {
+inline std::vector<path_value> first_forward_difference(const std::vector<path_value>::iterator start_it, const std::vector<path_value>::iterator end_it) {
     if (std::distance(start_it, end_it) < 3)
         return {};
         
-    std::vector<double> out;
+    std::vector<path_value> out;
     out.reserve(std::distance(start_it, end_it) - 2);
     
     for (auto i = start_it; i != std::prev(end_it); ++i) {
-            out.push_back(*std::next(i) - *std::prev(i));
+            const double val = std::next(i)->value - std::prev(i)->value; 
+            out.push_back({ val, i->timestamp });
     }
 
     return out;
 }
 
-inline std::vector<double> first_central_difference(const std::vector<double>::iterator start_it, const std::vector<double>::iterator end_it) {
+inline std::vector<path_value> first_central_difference(const std::vector<path_value>::iterator start_it, const std::vector<path_value>::iterator end_it) {
     if (std::distance(start_it, end_it) < 3)
         return {};
         
-    std::vector<double> out;
+    std::vector<path_value> out;
     out.reserve(std::distance(start_it, end_it) - 2);
     
     for (auto i = std::next(start_it); i != std::prev(end_it); ++i) {
-            out.push_back((*std::next(i) - *std::prev(i)) / 2.0);
+            const double val = (std::next(i)->value - std::prev(i)->value) / 2.0;
+            out.push_back( { val, i->timestamp });
     }
 
     return out;
@@ -473,6 +536,8 @@ inline std::vector<double> first_central_difference(const std::vector<double>::i
 //-------------- I/O Functions -------------- 
 //
 
+// Quick and dirty function for loading a path from a gpx file
+//
 inline path load_gpx_qd(const std::string filename) {
     path out;
     
@@ -483,20 +548,37 @@ inline path load_gpx_qd(const std::string filename) {
 
     std::string line;
 
+    location loc{};
+    
     try {
-    static const std::regex regexp(R"(lat\s*\=\s*\"([-+0-9\.]+)\" lon\s*=\s*\"([-+0-9\.]+)\")"); 
     while (getline(fs, line)) { 
         auto p = line.find("lat");
+        std::smatch match;
         
         if (p != std::string::npos) {
-            std::smatch match;
+            
+            static const std::regex l_regexp(R"(lat\s*\=\s*\"([-+0-9\.]+)\" lon\s*=\s*\"([-+0-9\.]+)\")"); 
 
-            if (std::regex_search(line, match, regexp)) {
+            if (std::regex_search(line, match, l_regexp)) {
                 double lat = atof(match[1].str().c_str());
                 double lon = atof(match[2].str().c_str());
-                out.push_back({ {lat, lon }});
+                loc = { lat, lon };
             }
+        } else {
+            p = line.find("time");
+        
+            // <time>2022-05-07T10:20:08.000Z</time>
+            static const std::regex t_regexp(R"(<time>([^<]+)<)"); 
+        
+            if (std::regex_search(line, match, t_regexp)) {
+                const auto time_str = match[1].str();
+                const auto time = str_to_time_utc(time_str);
+                //std::cout << "pos: (" << loc.lat << ", " << loc.lon << ")" << std::endl; 
+                out.push_back({ loc, time });
+            }
+
         }
+        
     }
 
     } catch (const std::regex_error& ex) {
@@ -505,4 +587,92 @@ inline path load_gpx_qd(const std::string filename) {
     
     return out;
 }
+
+// Quick and Dirty (qd) write path segment to .gpx
+inline void save_gpx_qd(const std::string filename, const path::iterator start_it, const path::iterator end_it) {
+
+    
+    if (start_it == end_it)
+        return;
+    
+    const char* header = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1">
+                  <metadata>
+                  </metadata>
+                  <trk>
+                    <trkseg>
+                )";
+    
+    const char* footer = R"(</trkseg>
+                            </trk>
+                            </gpx>)";
+    
+    std::ofstream out(filename);
+    
+    out << header;
+    out.precision(10);
+    
+    /*
+    <trkpt lat="52.988222" lon="-6.413189">
+        <ele>166.27321</ele>
+        <time>2022-05-07T10:20:08.000Z</time>
+    </trkpt>    
+    */
+    
+    for (auto i = std::next(start_it); i != std::prev(end_it); ++i) {
+        const double lat = i->loc.lat;
+        const double lon = i->loc.lon;
+        
+        out << "<trkpt lat=\"" << lat << "\"" << " lon=\"" << lon << "\">";
+        out << "</trkpt>";
+        out << std::endl;
+    }
+
+    out << footer;
+}
+
+// Quick and dirty load of path from csv file.
+//
+inline path load_csv_qd(const std::string filename) {
+    path out;
+    
+    std::cout << "Loading " << filename << std::endl;
+    
+    std::ifstream fs(filename);
+    
+    if (!fs)
+        return out;
+
+    std::cout << "loaded" << std::endl;
+
+    std::string line;
+
+    location loc{};
+    
+    try {
+        while (getline(fs, line)) { 
+            // 1658184839700,27797,51.872949,-8.582667,40.6,80.57,4,0.00,0.00,0.000,-1,0,0
+            std::cout << line << std::endl;
+            long long ts;
+            int tsd;
+            double lat;
+            double lon;
+            
+            if (sscanf(line.c_str(), "%lld,%ld,%lf,%lf", &ts, &tsd, &lat, &lon) == 4) {
+                printf("have one\n");
+                loc = { lat, lon };
+                auto time = "";
+                out.push_back({ loc });
+            }
+            
+        }
+
+    } catch (const std::regex_error& ex) {
+        printf("ex: %s %d\n", ex.what(), ex.code()); 
+    }
+    
+    return out;
+}
+
+
 }   // namespace
