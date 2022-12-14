@@ -482,6 +482,37 @@ inline path::iterator find_closest_path_point_dist(const path::iterator start_it
     return closest;
 }
 
+inline std::vector<path::iterator> find_stationary_points(const path::iterator start_it, const path::iterator end_it, const int radius_m, const int time_s) {
+    // Find the points where successive distance travelled values
+    // does not go further than 10m
+    
+    path::iterator start = start_it;
+    int stationary_count = 0;
+    bool time_ok = false;
+    
+    for (auto i = start_it; i != std::prev(end_it); ++i) {
+        const auto next = std::next(i);
+        const auto delta = distance(start->loc, next->loc);
+        
+        if (delta < radius_m) {
+                        
+            if (i->timestamp - start->timestamp >  std::chrono::seconds(time_s)) {
+                time_ok = true;
+            }
+        } else {
+
+            if (time_ok) {
+                return { start, i };
+            }
+            
+            start = i;
+        }
+    }
+    
+    // none found
+    return { end_it, end_it };
+}
+
 //
 //-------------- Helper Functions -------------- 
 //
@@ -550,19 +581,22 @@ inline path load_gpx_qd(const std::string filename) {
 
     location loc{};
     
+    bool have_loc = false;
+    
     try {
     while (getline(fs, line)) { 
         auto p = line.find("lat");
         std::smatch match;
-        
-        if (p != std::string::npos) {
             
+        if (p != std::string::npos) {
+        
             static const std::regex l_regexp(R"(lat\s*\=\s*\"([-+0-9\.]+)\" lon\s*=\s*\"([-+0-9\.]+)\")"); 
 
             if (std::regex_search(line, match, l_regexp)) {
                 double lat = atof(match[1].str().c_str());
                 double lon = atof(match[2].str().c_str());
                 loc = { lat, lon };
+                have_loc = true;
             }
         } else {
             p = line.find("time");
@@ -570,11 +604,12 @@ inline path load_gpx_qd(const std::string filename) {
             // <time>2022-05-07T10:20:08.000Z</time>
             static const std::regex t_regexp(R"(<time>([^<]+)<)"); 
         
-            if (std::regex_search(line, match, t_regexp)) {
+            if (std::regex_search(line, match, t_regexp) && have_loc) {
                 const auto time_str = match[1].str();
                 const auto time = str_to_time_utc(time_str);
                 //std::cout << "pos: (" << loc.lat << ", " << loc.lon << ")" << std::endl; 
                 out.push_back({ loc, time });
+
             }
 
         }
@@ -652,16 +687,14 @@ inline path load_csv_qd(const std::string filename) {
     try {
         while (getline(fs, line)) { 
             // 1658184839700,27797,51.872949,-8.582667,40.6,80.57,4,0.00,0.00,0.000,-1,0,0
-            std::cout << line << std::endl;
+            //std::cout << line << std::endl;
             long long ts;
             int tsd;
             double lat;
             double lon;
             
             if (sscanf(line.c_str(), "%lld,%ld,%lf,%lf", &ts, &tsd, &lat, &lon) == 4) {
-                printf("have one\n");
                 loc = { lat, lon };
-                auto time = "";
                 out.push_back({ loc });
             }
             

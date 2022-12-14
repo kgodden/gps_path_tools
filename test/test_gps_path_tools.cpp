@@ -305,6 +305,19 @@ static bool test_path_distance() {
     return passed;
 }
 
+static bool test_path_distance_on_gpx() {
+    auto passed = true;
+    
+    std::cout << "Testing test_path_distance_on_gpx()" << std::endl;
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+
+    auto out = path_distance(path.begin(), path.end());
+
+    passed &= value_test(out, 8338 * 2, 0.1);
+    
+    return passed;
+}
+
 static bool test_path_cumulative_distance() {
     auto passed = true;
     
@@ -399,6 +412,27 @@ static bool test_find_closest_path_point_dist() {
 
 }
 
+static test_find_stationary_points() {
+    auto passed = true;
+
+    std::cout << "Testing test_find_stationary_points()" << std::endl;
+
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    
+    auto it = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
+    
+    std::cout << "from: " << time_to_str_utc(it[0]->timestamp) << std::endl;
+    std::cout << "to: " << time_to_str_utc(it[1]->timestamp) << std::endl;
+    
+    it = find_stationary_points(it[1], path.end(), 10, 2 * 60);
+    
+    std::cout << "from: " << time_to_str_utc(it[0]->timestamp) << std::endl;
+    std::cout << "to: " << time_to_str_utc(it[1]->timestamp) << std::endl;
+
+}
+
+
+
 static bool test_load_gpx_qd() {
     auto passed = true;
 
@@ -474,6 +508,7 @@ int main() {
     tests_passed += test_heading();
     tests_passed += test_distance();
     tests_passed += test_path_distance();
+    tests_passed += test_path_distance_on_gpx();
     tests_passed += test_path_cumulative_distance();
     tests_passed += test_path_heading();
     tests_passed += test_find_closest_path_point_dist();
@@ -481,6 +516,7 @@ int main() {
     tests_passed += test_load_gpx_qd();
     tests_passed += test_save_gpx_qd();
     tests_passed += test_load_csv_qd();
-    
+    tests_passed += test_find_stationary_points();
+
     return tests_passed ? 0 : 1;
 }
