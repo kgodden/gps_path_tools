@@ -45,6 +45,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
 + ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
 + ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
++ ```find_stationary_points()``` - Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
 + ```load_gpx_qd()``` - Loads a sequence of GPS locations in a GPX file into a GPS path - Quick and Dirty, very limited/work in progress.
 
 # Types
