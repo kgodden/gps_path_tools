@@ -103,3 +103,36 @@ struct path_value {
 
 # Tests
 There are some tests in the test directory, to compile and run them run **make** and then execute **./test_gps_path_tools**
+
+# Examples
+
+## Find first stationary segment of a path loaded from a GPX file
+
+This function attempts to find the first "stationary segment" in the path loaded from  table_mountain_loop.gpx, here we define "stationary" as not moving outside a 10m radius during a 2 minute interval.
+
+```cpp
+void find_stationary_points() {
+
+	// Load GPX
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    
+	// Find the first stationary segment on the path, here we are deemed as
+	// stationary if we stay within a 10m radius for 2 minutes.  Will return
+	// an iterator to the first and last points in the stationary path segment.
+    auto stat = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
+    
+	if (stat.size() > 0) {
+        auto time0 = stat[0]->timestamp;
+        auto time1 = stat[1]->timestamp;
+        auto location = stat[0]->loc;
+        
+		std::cout << "Stationary near " << to_string(location) << std::endl;
+        std::cout << "From: " << time_to_str_utc(time0) << std::endl;
+		std::cout << "To: " << time_to_str_utc(time1) << std::endl;
+        std::cout << "For a time of " << duration_to_seconds(time0, time1) << " seconds." << std::endl;
+	} else {
+		std::cout << "No stationary segment found." << std::endl;
+	}
+}
+```
+
