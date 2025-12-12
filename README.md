@@ -106,6 +106,100 @@ There are some tests in the test directory, to compile and run them run **make**
 
 # Examples
 
+## Calculate the Haversine distance between two locations
+
+```cpp
+void haversine_distance() {
+
+    location p1{ 52.9827588546699, -6.040081945988319 };
+    location p2{ 53.057744464984495, -6.040085910508501};
+    
+    auto dist = distance(p1, p2);
+
+    std::cout << "The distance between " << to_string(p1) << " and " << to_string(p2) << " is " << dist << "m" << std::endl;
+}
+```
+
+## Calculate the Heading/Bearing between two locations
+
+```cpp
+void heading() {
+    
+    location p1{ 52.981935612371615, -6.0326861216896495 };
+    location p2{ 52.98331462882221, -6.034538892416848};
+    
+    auto bearing = heading(p1, p2);
+    
+    std::cout << "The bearing between " << to_string(p1) << " and " << to_string(p1) << " is " << bearing << " degrees";
+}
+```
+
+## Calculate the piece-wise Haversine distance along a path.
+
+```cpp
+void path_distance() {
+    
+    std::vector<path_point> path = {
+        { { 52.9827588546699, -6.040081945988319 } }, 
+        { { 53.057744464984495, -6.040085910508501 } },
+        { { 52.9827588546699, -6.040081945988319 } }, 
+    };
+
+    auto distance = path_distance(path.begin(), path.end());
+    
+    std::cout << "The piece-wise distance along the path is " << distance << "m" << std::endl;
+}
+```
+
+## Calculate the distance along a path loaded from a GPX file.
+
+```cpp
+void path_distance_from_gpx() {
+    auto path = load_gpx_qd("table_mountain_loop.gpx");
+
+    auto distance = path_distance(path.begin(), path.end());
+
+    std::cout << "The piece-wise distance along the path is " << distance << "m" << std::endl;
+}
+```
+
+## Find the point on a path that is closest to a given location
+
+```cpp
+void closest_path_point() {
+
+    location target{52.988181, -6.413106};
+        
+    std::vector<path_point> path = {
+        { { 52.988201, -6.413192 } }, 
+        { { 52.988222, -6.413189 } }, 
+        { { 52.98821, -6.413156 } }, 
+        { { 52.988189, -6.413176 } }, 
+        { { 52.988171, -6.413184 } }, 
+        { { 52.988148, -6.413189 } }, 
+        { { 52.988109, -6.413218 } }, 
+    };
+    
+    auto closest = find_closest_path_point_dist(path.begin(), path.end(), target);
+    auto dist = distance(closest->loc, target);
+
+    std::cout << "The closest point on the path to  " << to_string(target) << " is " << to_string(closest->loc) << ", it is " << dist << "m away" << std::endl; 
+}
+```
+
+## Get Cardinal Direction from bearing and back-bearing
+
+```cpp
+void cardinal_direction() {
+
+    double bearing = 324.0;
+    double back_bearing = 324 + 180.0;
+    
+    std::cout << "The cardinal direction of bearing " << bearing << "deg. is " << cardinal_direction(bearing) << std::endl;
+    std::cout << "The cardinal direction of back-bearing on " << bearing << "deg. is " << cardinal_direction(back_bearing) << std::endl;
+}
+```
+
 ## Find first stationary segment of a path loaded from a GPX file
 
 This function attempts to find the first "stationary segment" in the path loaded from  table_mountain_loop.gpx, here we define "stationary" as not moving outside a 10m radius during a 2 minute interval.
