@@ -22,6 +22,8 @@
 #include <vector>
 #include <fstream>
 #include <regex>
+#include <iostream>
+#include <iomanip>
  
 namespace gps_path_tools {
 
@@ -65,6 +67,14 @@ typedef std::vector<path_point> path;
 //
 //-------------- Conversions -------------- 
 //
+
+inline std::string to_string(const location& l) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(6)
+        << "(" << l.lat << ", " << l.lon << ")";
+        
+    return oss.str();
+}
 
 inline double to_radians(const double theta) {
     return (theta * M_PI) / 180.0;
@@ -203,11 +213,17 @@ inline std::string duration_to_str(const path_time t1, const path_time t2) {
 	return stream.str();
 }
 
+//
+// Converts the duration between two path times to a number of seconds.
+//
 inline double duration_to_seconds(const path_time t1, const path_time t2) {
 	auto delta = t2 - t1;
 	return std::chrono::duration_cast<std::chrono::seconds>(delta).count();
 }
 
+//
+// Converts a path time point to the number of microseconds in the Unix epoch.
+//
 inline long long time_to_us(const path_time time) {
     return std::chrono::duration_cast<std::chrono::microseconds>(time.time_since_epoch()).count();
 }
@@ -391,6 +407,9 @@ inline double path_distance(const path::const_iterator start_it, const path::con
     return dist;
 }    
 
+//
+// Calculates the nominal heading between each path location and the next location in the given path.
+//
 inline std::vector<path_value> path_heading(const path::iterator start_it, const path::iterator end_it) {
         
     if (std::distance(start_it, end_it) < 2)
@@ -415,6 +434,9 @@ inline std::vector<path_value> path_heading(const path::iterator start_it, const
     return out;
 }    
 
+// 
+// Calculates the mean speed between the pairs of locations in the given path.
+//
 inline std::vector<path_value> path_speed(const path::const_iterator start_it, const path::const_iterator end_it) {
         
     if (std::distance(start_it, end_it) < 2)
@@ -428,7 +450,7 @@ inline std::vector<path_value> path_speed(const path::const_iterator start_it, c
     out.reserve(std::distance(start_it, end));
     
     // Loop through from start to the second last
-    // point accumulating the heading between
+    // point accumulating the speed between
     // the point pairs.
     for (auto i = start_it; i != end; ++i) {
         const auto h = speed(i->loc, std::next(i)->loc, (double)std::chrono::duration_cast<std::chrono::microseconds>(std::next(i)->timestamp - i->timestamp).count() / 1E6); 
@@ -438,6 +460,10 @@ inline std::vector<path_value> path_speed(const path::const_iterator start_it, c
     
     return out;
 }
+
+//
+// Sums up the location to location distances on the given path.
+//
 inline std::vector<path_value> path_cumulative_distance(const path::iterator start_it, const path::iterator end_it) {
         
     if (std::distance(start_it, end_it) < 2)
@@ -465,6 +491,9 @@ inline std::vector<path_value> path_cumulative_distance(const path::iterator sta
     return out;
 }    
 
+//
+// Finds the closest path point to the provided target location based on time.
+//
 inline path::iterator find_closest_path_point_time(const path::iterator start_it, const path::iterator end_it, path_time target_timestamp) {
 
     // Check for empty/bad range
@@ -486,6 +515,9 @@ inline path::iterator find_closest_path_point_time(const path::iterator start_it
     return closest;
 }
 
+//
+// Finds the closest path point to the provided target location based on distance.
+//
 inline path::iterator find_closest_path_point_dist(const path::iterator start_it, const path::iterator end_it, const location& target) {
     
     // Check for empty/bad range
@@ -507,9 +539,12 @@ inline path::iterator find_closest_path_point_dist(const path::iterator start_it
     return closest;
 }
 
+//
+// Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
+//
 inline std::vector<path::const_iterator> find_stationary_points(const path::const_iterator start_it, const path::const_iterator end_it, const int radius_m, const int time_s) {
     // Find the points where successive distance travelled values
-    // does not go further than 10m
+    // does not go further than radius_m
     
     auto start = start_it;
     int stationary_count = 0;

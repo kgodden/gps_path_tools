@@ -412,6 +412,7 @@ static bool test_find_closest_path_point_dist() {
 
 }
 
+
 static test_find_stationary_points() {
     auto passed = true;
 
@@ -430,8 +431,6 @@ static test_find_stationary_points() {
     std::cout << "to: " << time_to_str_utc(it[1]->timestamp) << std::endl;
 
 }
-
-
 
 static bool test_load_gpx_qd() {
     auto passed = true;
