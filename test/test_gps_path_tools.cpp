@@ -494,9 +494,60 @@ static bool test_cardinal_direction() {
     return passed;
 }
 
+static void test_100m() {
+	auto path = load_gpx_qd("knocknalogha_moot_25.gpx");
+	std::cout << "Loaded " << path.size() << " points." << std::endl;
+	print_path_summary(path);
+	
+	auto search_end = std::next(path.begin(), path.size() / 3);
+	
+	auto s1 = find_closest_path_point_dist(path.begin(), search_end, { 52.2494, -7.96006 });
+	auto s2 = find_closest_path_point_dist(path.begin(), search_end, { 52.2476, -7.95012 });
+
+/*
+	for (auto it = s1; it != s2; ++it) {
+		std::cout << time_to_str_utc(s1->timestamp) << " lat: " << it->loc.lat << std::endl;
+	}
+*/	
+	std::cout << "Section start: " << time_to_str_utc(s1->timestamp) << std::endl;
+	std::cout << "Section end: " << time_to_str_utc(s2->timestamp) << std::endl;
+	std::cout << "Section points: " << (s2 - s1) << std::endl;
+	
+	save_gpx_qd("./section.gpx", s1, s2);
+	
+	auto speed = path_speed(s1, s2);
+
+	std::cout << "Speed points: " << speed.size() << std::endl;
+	
+	std::ofstream file("./knocknalogha.csv");
+    
+    int i = 0;
+    
+    for (const auto& s : speed) {
+        file << time_to_str_utc(s.timestamp) << "," << s.value << std::endl;
+    }
+	
+	auto p1 = s1 + 8 - 1;
+	auto p2 = s1 + 23;
+	
+	auto dist = path_distance(p1, p2);
+	
+	std::cout << "Distance 1: " << dist << std::endl;
+	
+	auto p3 = s1 + 26 - 1;
+	auto p4 = s1 + 42 + 1;
+	
+	auto dist1 = path_distance(p3, p4);
+	
+	std::cout << "Distance 2: " << dist1 << std::endl;
+	
+	
+}
 
 int main() {
 
+	test_100m();
+	
     auto tests_passed = true;
     
     tests_passed &= test_to_radians();

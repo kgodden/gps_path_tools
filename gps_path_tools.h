@@ -183,6 +183,31 @@ inline std::string time_to_str_utc(const path_time time) {
 	return stream.str();
 }
 
+//
+// Converts the duration between two path times to a string
+// in the format HH:MM:SS
+//
+inline std::string duration_to_str(const path_time t1, const path_time t2) {
+	
+	auto delta = t2 - t1;
+	auto secs = std::chrono::duration_cast<std::chrono::seconds>(delta).count();
+
+    int hours = static_cast<int>(secs / 3600);
+    secs %= 3600;
+    int minutes = static_cast<int>(secs / 60);
+    int seconds = static_cast<int>(secs % 60);	
+	
+	std::stringstream stream;
+	stream << hours << ":" << std::setw(2) << std::setfill('0') << minutes << ":" << std::setw(2) << std::setfill('0') << seconds;
+
+	return stream.str();
+}
+
+inline double duration_to_seconds(const path_time t1, const path_time t2) {
+	auto delta = t2 - t1;
+	return std::chrono::duration_cast<std::chrono::seconds>(delta).count();
+}
+
 inline long long time_to_us(const path_time time) {
     return std::chrono::duration_cast<std::chrono::microseconds>(time.time_since_epoch()).count();
 }
@@ -337,7 +362,7 @@ inline double heading(const location& l1, const location& l2) {
 //-------------- Path Functions -------------- 
 //
 
-inline double path_distance(const path::iterator start_it, const path::iterator end_it) {
+inline double path_distance(const path::const_iterator start_it, const path::const_iterator end_it) {
     
     double dist = 0.0;
     
@@ -390,7 +415,7 @@ inline std::vector<path_value> path_heading(const path::iterator start_it, const
     return out;
 }    
 
-inline std::vector<path_value> path_speed(const path::iterator start_it, const path::iterator end_it) {
+inline std::vector<path_value> path_speed(const path::const_iterator start_it, const path::const_iterator end_it) {
         
     if (std::distance(start_it, end_it) < 2)
         return {};
@@ -482,11 +507,11 @@ inline path::iterator find_closest_path_point_dist(const path::iterator start_it
     return closest;
 }
 
-inline std::vector<path::iterator> find_stationary_points(const path::iterator start_it, const path::iterator end_it, const int radius_m, const int time_s) {
+inline std::vector<path::const_iterator> find_stationary_points(const path::const_iterator start_it, const path::const_iterator end_it, const int radius_m, const int time_s) {
     // Find the points where successive distance travelled values
     // does not go further than 10m
     
-    path::iterator start = start_it;
+    auto start = start_it;
     int stationary_count = 0;
     bool time_ok = false;
     
@@ -567,16 +592,54 @@ inline std::vector<path_value> first_central_difference(const std::vector<path_v
 //-------------- I/O Functions -------------- 
 //
 
+//
+// Prints out a summary of the given path to stdio.
+//
+inline void print_path_summary(const path& in) {
+	std::cout << "Number of points: " << in.size() << std::endl;
+	
+	if (in.size() < 2) {
+		return;
+	}
+	
+	auto start = in.begin();
+	auto end = in.end();
+	
+	std::cout << "Start Time: " << time_to_str_utc(start->timestamp) << std::endl; 
+	std::cout << "End Time: " << time_to_str_utc(end->timestamp) << std::endl; 
+	std::cout << "Duration: " << duration_to_str(start->timestamp, (end - 1)->timestamp) << std::endl; 
+	
+	auto dist = path_distance(start, end);
+	
+	std::cout << "Distance: " << dist << "m" << std::endl;
+	
+	auto seconds = duration_to_seconds(start->timestamp, (end - 1)->timestamp);
+	auto speed = seconds > 0 ? dist / seconds : 0.0;
+	
+	std::cout << "Mean Speed: " << std::fixed << std::setprecision(1) << mps_to_kph(speed) << "kph" << std::endl;
+	
+	auto spoints = find_stationary_points(in.begin(), in.end(), 15.0, 3 * 60);
+	
+	std::cout << "Stationary points " << spoints.size() << std::endl;
+	
+	for (const auto p : spoints) {
+		std::cout << "Time: " << time_to_str_utc(p->timestamp) << std::endl;
+	}
+	
+
+}
 // Quick and dirty function for loading a path from a gpx file
 //
-inline path load_gpx_qd(const std::string filename) {
+inline path load_gpx_qd(const std::string& filename) {
     path out;
     
     std::ifstream fs(filename);
     
-    if (!fs)
-        return out;
-
+    if (!fs) {
+		std::cout << "Could not load " << filename << std::endl;
+		return out;
+	}
+	
     std::string line;
 
     location loc{};
@@ -587,7 +650,7 @@ inline path load_gpx_qd(const std::string filename) {
     while (getline(fs, line)) { 
         auto p = line.find("lat");
         std::smatch match;
-            
+
         if (p != std::string::npos) {
         
             static const std::regex l_regexp(R"(lat\s*\=\s*\"([-+0-9\.]+)\" lon\s*=\s*\"([-+0-9\.]+)\")"); 
