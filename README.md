@@ -80,6 +80,8 @@ cmake build .
 
 ```
 
+The tests use the [doctest](https://github.com/doctest/doctest) test framework.
+
 # Types
 
 + location - a POD struct that holds latitude and longitude.
@@ -128,9 +130,6 @@ struct path_value {
     path_time timestamp;
 };
 ```
-
-# Tests
-There are some tests in the test directory, to compile and run them run **make** and then execute **./test_gps_path_tools**
 
 # Examples
 
