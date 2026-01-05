@@ -54,7 +54,8 @@ This is currently a work in progress, the currently implemented functions are:
 + ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
 + ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
 + ```find_stationary_points()``` - Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
-+ ```load_gpx_qd()``` - Loads a sequence of GPS locations in a GPX file into a GPS path - Quick and Dirty, very limited/work in progress.
++ ```load_gpx_trk()``` - Loads a sequence of GPS locations in a GPX file into a GPS path - Quick and Dirty, very limited/work in progress.
++ ```save_gpx_trk()``` - Saves a path to a GPX file as a <trk>.
 + ```smooth()``` - Smooths a vector of path values, for example speeds or distances etc.
 + ```first_forward_difference()``` - Calculates the First Forward Difference of a vector of path values to obtain its numerical derivative.
 + ```first_central_difference()``` - Calculates the First Central Difference of a vector of path values to obtain its numerical derivative.
@@ -155,7 +156,7 @@ void path_distance() {
 
 ```cpp
 void path_distance_from_gpx() {
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    auto path = load_gpx_trk("table_mountain_loop.gpx");
 
     auto distance = path_distance(path.begin(), path.end());
 
@@ -208,7 +209,7 @@ This function attempts to find the first "stationary segment" in the path loaded
 void find_stationary_points() {
 
 	// Load GPX
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    auto path = load_gpx_trk("table_mountain_loop.gpx");
     
 	// Find the first stationary segment on the path, here we are deemed as
 	// stationary if we stay within a 10m radius for 2 minutes.  Will return
