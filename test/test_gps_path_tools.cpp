@@ -445,6 +445,16 @@ TEST_CASE("test_load_csv_qd") {
     save_gpx_trk("test_gps_log.gpx", path.begin()+60, path.end());
 }
 
+TEST_CASE("test_generate_path_summary") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+
+    auto summary = generate_path_summary(path.begin(), path.end());
+    CHECK(value_test(summary.points, 6115));
+    CHECK(value_test(summary.start_time, time_to_str_utc(path.begin()->timestamp)));
+    CHECK(value_test(summary.end_time, time_to_str_utc(path.end()->timestamp)));
+    CHECK(value_test(summary.duration_s, duration_to_seconds(path.front().timestamp, path.back().timestamp)));
+}
+
 #if 0
 static void test_100m() {
 	auto path = load_gpx_trk_qd(make_data_path("knocknalogha_moot_25.gpx"));

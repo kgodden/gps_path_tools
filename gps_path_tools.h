@@ -16,6 +16,7 @@
 //   limitations under the License.
 
 
+#include <iterator>
 #include <math.h>
 #include <chrono>
 #include <time.h>
@@ -37,17 +38,22 @@ static constexpr double geoid_radius_m = 6371009;   // The mean radius of the Ge
 //-------------- Types -------------- 
 //
 
-typedef std::chrono::time_point<std::chrono::system_clock> path_time;
-
 struct location {
     // Note that it is assumed that latitude and
     // longitude are always provided as decimal
     // degrees.
     
+    // Latitude
     double lat;
+
+    // Longitude
     double lon;
+
+    // Elevation
     double ele;
 };
+
+typedef std::chrono::time_point<std::chrono::system_clock> path_time;
 
 // Represents a point on a path or sequence of GPS locations.
 struct path_point {
@@ -64,6 +70,29 @@ struct path_value {
 };
 
 typedef std::vector<path_point> path;
+
+// Holds some path summary data, use
+// generate_path_summary() to create a summary.
+struct path_summary {
+
+    // The number of points in the path
+    size_t points;
+
+    // Start & End times,
+    // i.e. times of first and last points
+    std::string start_time;
+    std::string end_time;
+
+    // Path duration in seconds (end_time - start_time)
+    double duration_s;
+
+    // Path piece-wise length/distance in metres
+    double distance_m;
+
+    // Mean speed along path in km/h
+    double mean_speed_kph;
+};
+
 
 //
 //-------------- Conversions -------------- 
@@ -464,7 +493,7 @@ inline std::vector<path_value> path_speed(const path::const_iterator start_it, c
 //
 // Sums up the location to location distances on the given path.
 //
-inline std::vector<path_value> path_cumulative_distance(const path::iterator start_it, const path::iterator end_it) {
+inline std::vector<path_value> path_cumulative_distance(const path::const_iterator start_it, const path::const_iterator end_it) {
         
     if (std::distance(start_it, end_it) < 2)
         return {};
@@ -577,7 +606,7 @@ inline std::vector<path::const_iterator> find_stationary_points(const path::cons
 //-------------- Helper Functions -------------- 
 //
 
-inline std::vector<path_value> smooth(const std::vector<path_value>::iterator start_it, const std::vector<path_value>::iterator end_it) {
+inline std::vector<path_value> smooth(const std::vector<path_value>::const_iterator start_it, const std::vector<path_value>::const_iterator end_it) {
     if (std::distance(start_it, end_it) < 3)
         return {};
         
@@ -594,7 +623,7 @@ inline std::vector<path_value> smooth(const std::vector<path_value>::iterator st
     return out;
 }
 
-inline std::vector<path_value> first_forward_difference(const std::vector<path_value>::iterator start_it, const std::vector<path_value>::iterator end_it) {
+inline std::vector<path_value> first_forward_difference(const std::vector<path_value>::const_iterator start_it, const std::vector<path_value>::const_iterator end_it) {
     if (std::distance(start_it, end_it) < 3)
         return {};
         
@@ -623,6 +652,28 @@ inline std::vector<path_value> first_central_difference(const std::vector<path_v
 
     return out;
 }
+
+inline path_summary generate_path_summary(const path::const_iterator start_it, const path::const_iterator end_it) {
+    path_summary summary{};
+
+    summary.points = std::distance(start_it, end_it);
+	
+	if (summary.points < 2) {
+		return summary;
+	}
+	
+	summary.start_time = time_to_str_utc(start_it->timestamp);
+	summary.end_time = time_to_str_utc(end_it->timestamp); 
+	summary.duration_s = duration_to_seconds(start_it->timestamp, (end_it- 1)->timestamp); 
+	summary.distance_m = path_distance(start_it, end_it);	
+	auto seconds = duration_to_seconds(start_it->timestamp, (end_it - 1)->timestamp);
+	auto speed = seconds > 0 ? summary.distance_m / seconds : 0.0;
+	
+	summary.mean_speed_kph = mps_to_kph(speed);	
+
+    return summary;
+}
+
 
 //
 //-------------- I/O Functions -------------- 
@@ -661,8 +712,6 @@ inline void print_path_summary(const path& in) {
 	for (const auto p : spoints) {
 		std::cout << "Time: " << time_to_str_utc(p->timestamp) << std::endl;
 	}
-	
-
 }
 
 // Quick and Dirty (qd) write path segment to .gpx
