@@ -57,6 +57,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```smooth()``` - Smooths a vector of path values, for example speeds or distances etc.
 + ```first_forward_difference()``` - Calculates the First Forward Difference of a vector of path values to obtain its numerical derivative.
 + ```first_central_difference()``` - Calculates the First Central Difference of a vector of path values to obtain its numerical derivative.
++ ```generate_path_summary()``` - Generates a summary of the GPS path including Start Time, End Time, Durationm Distance etc. returns a **path_summary** struct 
 + ```print_path_summary()``` - Generates and prints to STDIO a summary of the GPS path including Start Time, End Time, Durationm Distance etc.
 
 # Using from your project
@@ -129,6 +130,32 @@ struct path_value {
     double value;
     path_time timestamp;
 };
+```
++ path_summary - A struct that holds some path summary data, retruned by **generate_path_summary()**
+
+```cpp
+// Holds some path summary data, use
+// generate_path_summary() to create a summary.
+struct path_summary {
+
+    // The number of points in the path
+    size_t points;
+
+    // Start & End times,
+    // i.e. times of first and last points
+    std::string start_time;
+    std::string end_time;
+
+    // Path duration in seconds (end_time - start_time)
+    double duration_s;
+
+    // Path piece-wise length/distance in metres
+    double distance_m;
+
+    // Mean speed along path in km/h
+    double mean_speed_kph;
+};
+
 ```
 
 # Examples
