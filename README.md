@@ -25,8 +25,6 @@ int main() {
 }
 ```
 
-Note that when compiling wou may need to define **_USE_MATH_DEFINES** depending on your compiler (-D_USE_MATH_DEFINES)
-
 # Tools
 This is currently a work in progress, the currently implemented functions are:
 
@@ -61,6 +59,26 @@ This is currently a work in progress, the currently implemented functions are:
 + ```first_central_difference()``` - Calculates the First Central Difference of a vector of path values to obtain its numerical derivative.
 + ```print_path_summary()``` - Generates and prints to STDIO a summary of the GPS path including Start Time, End Time, Durationm Distance etc.
 
+# Using from your project
+
+To use gps_path_tools from your project just include the headerfiles:
+
+For the GPS path functions include: **gps_path_tools.h**
+For Reading and writing GPS files include: **gps_path_io.h**
+
+Note that when compiling wou may need to define **_USE_MATH_DEFINES** depending on your compiler (-D_USE_MATH_DEFINES)
+
+# Building and Running the Tests
+
+```bash
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake build .
+
+# Run tests
+./path_tools_tests.exe
+
+```
 
 # Types
 
