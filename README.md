@@ -90,18 +90,27 @@ struct location {
     // longitude are always provided as decimal
     // degrees.
     
+    // Latitude
     double lat;
+
+    // Longitude
     double lon;
+
+    // Elevation
+    double ele;
 };
 ```
 
 + path_point - represents a single location on a path of GPS points.
 
 ```cpp
+typedef std::chrono::time_point<std::chrono::system_clock> path_time;
+
 // Represents a point on a path or sequence of GPS locations.
 struct path_point {
     location loc;
-    std::chrono::time_point<std::chrono::system_clock> timestamp;
+    path_time timestamp;
+    int sequence;
 };
 ```
 
