@@ -46,6 +46,7 @@ struct location {
     
     double lat;
     double lon;
+    double ele;
 };
 
 // Represents a point on a path or sequence of GPS locations.
@@ -151,7 +152,6 @@ inline double kph_to_mps(const double kph) {
 
 inline path_time str_to_time_utc(const std::string& time_str) {
     std::stringstream in(time_str);
-
 
     std::tm tm{};
     
@@ -585,6 +585,7 @@ inline std::vector<path_value> smooth(const std::vector<path_value>::iterator st
     out.reserve(std::distance(start_it, end_it) - 2);
     
     for (auto i = start_it; i != std::prev(end_it); ++i) {
+            // Triangular filter
             // Use [ 1, 2, 1 ] kernel
             const double val = (std::prev(i)->value + 2.0 * i->value + std::next(i)->value) / 4.0;
             out.push_back({ val , i->timestamp });
@@ -663,106 +664,8 @@ inline void print_path_summary(const path& in) {
 	
 
 }
-// Quick and dirty function for loading a path from a gpx file
-//
-inline path load_gpx_qd(const std::string& filename) {
-    path out;
-    
-    std::ifstream fs(filename);
-    
-    if (!fs) {
-		std::cout << "Could not load " << filename << std::endl;
-		return out;
-	}
-	
-    std::string line;
-
-    location loc{};
-    
-    bool have_loc = false;
-    
-    try {
-    while (getline(fs, line)) { 
-        auto p = line.find("lat");
-        std::smatch match;
-
-        if (p != std::string::npos) {
-        
-            static const std::regex l_regexp(R"(lat\s*\=\s*\"([-+0-9\.]+)\" lon\s*=\s*\"([-+0-9\.]+)\")"); 
-
-            if (std::regex_search(line, match, l_regexp)) {
-                double lat = atof(match[1].str().c_str());
-                double lon = atof(match[2].str().c_str());
-                loc = { lat, lon };
-                have_loc = true;
-            }
-        } else {
-            p = line.find("time");
-        
-            // <time>2022-05-07T10:20:08.000Z</time>
-            static const std::regex t_regexp(R"(<time>([^<]+)<)"); 
-        
-            if (std::regex_search(line, match, t_regexp) && have_loc) {
-                const auto time_str = match[1].str();
-                const auto time = str_to_time_utc(time_str);
-                //std::cout << "pos: (" << loc.lat << ", " << loc.lon << ")" << std::endl; 
-                out.push_back({ loc, time });
-
-            }
-
-        }
-        
-    }
-
-    } catch (const std::regex_error& ex) {
-        printf("ex: %s %d\n", ex.what(), ex.code()); 
-    }
-    
-    return out;
-}
 
 // Quick and Dirty (qd) write path segment to .gpx
-inline void save_gpx_qd(const std::string filename, const path::iterator start_it, const path::iterator end_it) {
-
-    
-    if (start_it == end_it)
-        return;
-    
-    const char* header = R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-                <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1">
-                  <metadata>
-                  </metadata>
-                  <trk>
-                    <trkseg>
-                )";
-    
-    const char* footer = R"(</trkseg>
-                            </trk>
-                            </gpx>)";
-    
-    std::ofstream out(filename);
-    
-    out << header;
-    out.precision(10);
-    
-    /*
-    <trkpt lat="52.988222" lon="-6.413189">
-        <ele>166.27321</ele>
-        <time>2022-05-07T10:20:08.000Z</time>
-    </trkpt>    
-    */
-    
-    for (auto i = std::next(start_it); i != std::prev(end_it); ++i) {
-        const double lat = i->loc.lat;
-        const double lon = i->loc.lon;
-        
-        out << "<trkpt lat=\"" << lat << "\"" << " lon=\"" << lon << "\">";
-        out << "</trkpt>";
-        out << std::endl;
-    }
-
-    out << footer;
-}
 
 // Quick and dirty load of path from csv file.
 //
@@ -787,11 +690,11 @@ inline path load_csv_qd(const std::string filename) {
             // 1658184839700,27797,51.872949,-8.582667,40.6,80.57,4,0.00,0.00,0.000,-1,0,0
             //std::cout << line << std::endl;
             long long ts;
-            int tsd;
+            long long tsd;
             double lat;
             double lon;
             
-            if (sscanf(line.c_str(), "%lld,%ld,%lf,%lf", &ts, &tsd, &lat, &lon) == 4) {
+            if (sscanf(line.c_str(), "%lld,%lld,%lf,%lf", &ts, &tsd, &lat, &lon) == 4) {
                 loc = { lat, lon };
                 out.push_back({ loc });
             }

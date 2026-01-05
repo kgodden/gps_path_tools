@@ -4,7 +4,11 @@
 #include <vector>
 #include <cmath>
 
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+
 #include "../gps_path_tools.h"
+#include "../gps_path_io.h"
 
 using namespace gps_path_tools;
 
@@ -69,6 +73,20 @@ static bool value_test(double value, double target, double allowable_delta) {
         return pass;
 }
 
+static bool value_test(path_time value, path_time target) {
+        auto pass = value == target;
+
+        if (pass) {
+            std::cout << "PASS";
+        } else {
+            std::cout << "FAIL";
+        }
+        
+        std::cout << ", got: " << time_to_str_utc(value) << ", target: " << time_to_str_utc(target) << std::endl;
+        
+        return pass;
+}
+
 static bool iterator_test(const path::iterator value, path::iterator target, path::iterator begin) {
         auto pass = value == target;
 
@@ -83,11 +101,11 @@ static bool iterator_test(const path::iterator value, path::iterator target, pat
         return pass;
 }
 
-static bool test_to_radians() {
-    auto passed = true;
-    
-    std::cout << "Testing to_radians()" << std::endl;
-    
+static std::string make_data_path(const std::string& file_name) {
+    return "../test_data/" + file_name;
+}
+
+TEST_CASE("test_to_radians") {
     std::vector<test_point2> test_points = {
         {0.0, 0.0, 0.0000001},
         {180.0, M_PI, 0.0000001},
@@ -98,17 +116,13 @@ static bool test_to_radians() {
     
     for (const auto& test_point: test_points) {
         auto out = to_radians(test_point.a);
-        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(out, test_point.target, test_point.allowable_delta));
     }
-    
-    return passed;
+
 }
 
-static bool test_to_degrees() {
-    auto passed = true;
-    
-    std::cout << "Testing test_to_degrees()" << std::endl;
-    
+
+TEST_CASE("test_to_radians") {
     std::vector<test_point2> test_points = {
         {0.0, 0.0, 0.0000001},
         {M_PI, 180.0, 0.0000001},
@@ -119,16 +133,11 @@ static bool test_to_degrees() {
     
     for (const auto& test_point: test_points) {
         auto out = to_degrees(test_point.a);
-        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(out, test_point.target, test_point.allowable_delta));
     }
-    
-    return passed;
 }
 
-static bool test_ddm_to_dd() {
-    auto passed = true;
-    
-    std::cout << "Testing ddm_to_dd()" << std::endl;
+TEST_CASE("test_ddm_to_dd") {
     
     std::vector<test_point2> test_points = {
         {0.0, 0.0, 0.0000001},
@@ -145,16 +154,11 @@ static bool test_ddm_to_dd() {
     
     for (const auto& test_point: test_points) {
         auto out = ddm_to_dd(test_point.a);
-        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(out, test_point.target, test_point.allowable_delta));
     }
-    
-    return passed;
 }
 
-static bool test_dd_to_ddm() {
-    auto passed = true;
-    
-    std::cout << "Testing dd_to_ddm()" << std::endl;
+TEST_CASE("test_dd_to_ddm") {
     
     std::vector<test_point2> test_points = {
         {0.0, 0.0, 0.0000001},
@@ -171,17 +175,11 @@ static bool test_dd_to_ddm() {
     
     for (const auto& test_point: test_points) {
         auto out = dd_to_ddm(test_point.a);
-        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(out, test_point.target, test_point.allowable_delta));
     }
-    
-    return passed;
 }
 
-static bool test_str_to_time_utc() {
-    auto passed = true;
-    
-    std::cout << "Testing str_to_time_utc()" << std::endl;
-    
+TEST_CASE("test_str_to_time_utc") {
     std::vector<std::pair<const char*, const char*>> tests = {
         { "2022-05-07T15:43:15.999999Z", "2022-05-07T15:43:15.999999Z" },
         { "2022-05-07T15:43:15.000000Z", "2022-05-07T15:43:15.000000Z" },
@@ -195,20 +193,11 @@ static bool test_str_to_time_utc() {
         auto time = str_to_time_utc(test.first);
         auto out = time_to_str_utc(time);
         
-        passed &= value_test(out, test.second);   
+        CHECK(value_test(out, test.second));
     }
-    
-       
-    return passed;
 }
 
-
-
-static bool test_distance_vec() {
-    auto passed = true;
-    
-    std::cout << "Testing distance_vec()" << std::endl;
-    
+TEST_CASE("test_distance_vec") {    
     std::vector<test_locations> test_points = {
         { { 52.9827588546699, -6.040081945988319 }, { 52.9827588546699, -6.040081945988319 }, 0, 1 },
         { { 52.9827588546699, -6.040081945988319 }, { 53.057744464984495, -6.040085910508501}, 8338, 10 },
@@ -221,17 +210,11 @@ static bool test_distance_vec() {
     
     for (const auto& test_point: test_points) {
         auto out = distance_vec(test_point.a, test_point.b);
-        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(out, test_point.target, test_point.allowable_delta));
     }
-    
-    return passed;
 }
 
-static bool test_distance() {
-    auto passed = true;
-    
-    std::cout << "Testing distance()" << std::endl;
-    
+TEST_CASE("test_distance") {        
     std::vector<test_locations> test_points = {
         { { 52.9827588546699, -6.040081945988319 }, { 52.9827588546699, -6.040081945988319 }, 0, 1 },
         { { 52.9827588546699, -6.040081945988319 }, { 53.057744464984495, -6.040085910508501}, 8338, 10 },
@@ -244,18 +227,11 @@ static bool test_distance() {
     
     for (const auto& test_point: test_points) {
         auto out = distance(test_point.a, test_point.b);
-        passed &= value_test(out, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(out, test_point.target, test_point.allowable_delta));
     }
-    
-    return passed;
 }
 
-
-static bool test_heading() {
-    auto passed = true;
-
-    std::cout << "Testing heading()" << std::endl;
-
+TEST_CASE("test_heading") {
     // Setup a list of test points
     std::vector<test_locations> test_points{
 
@@ -271,19 +247,16 @@ static bool test_heading() {
     // Loop through each test point.
     for (const auto& test_point: test_points) {
         auto h = heading(test_point.a, test_point.b);
-        passed &= value_test(h, test_point.target, test_point.allowable_delta);
+        CHECK(value_test(h, test_point.target, test_point.allowable_delta));
     }
 }
 
-static bool test_path_distance() {
-    auto passed = true;
-    
-    std::cout << "Testing path_distance()" << std::endl;
+TEST_CASE("test_path_distance") {
     std::vector<path_point> path;
     
     // Test empty path
     auto out = path_distance(path.begin(), path.end());
-    passed &= value_test(out, 0, 0.0000001);
+    CHECK(value_test(out, 0, 0.0000001));
         
     // Test invalid path with one point
     path = {
@@ -291,7 +264,7 @@ static bool test_path_distance() {
     };
 
     out = path_distance(path.begin(), path.end());
-    passed &= value_test(out, 0, 0.0000001);
+    CHECK(value_test(out, 0, 0.0000001));
 
     path = {
         { { 52.9827588546699, -6.040081945988319 } }, 
@@ -300,28 +273,20 @@ static bool test_path_distance() {
     };
 
     out = path_distance(path.begin(), path.end());
-    passed &= value_test(out, 8338 * 2, 0.1);
-    
-    return passed;
+    CHECK(value_test(out, 8338 * 2, 0.1));
 }
 
-static bool test_path_distance_on_gpx() {
-    auto passed = true;
-    
-    std::cout << "Testing test_path_distance_on_gpx()" << std::endl;
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
+TEST_CASE("test_path_distance_on_gpx") {
+
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
 
     auto out = path_distance(path.begin(), path.end());
 
-    passed &= value_test(out, 8338 * 2, 0.1);
-    
-    return passed;
+    CHECK(value_test(out, 16964, 0.5));
 }
 
-static bool test_path_cumulative_distance() {
-    auto passed = true;
-    
-    std::cout << "Testing path_cumulative_distance()" << std::endl;
+/*
+TEST_CASE("test_path_cumulative_distance") {
     auto path = load_gpx_qd("table_mountain_loop.gpx");
 
     auto cdist = path_cumulative_distance(path.begin(), path.end());
@@ -336,53 +301,26 @@ static bool test_path_cumulative_distance() {
     for (const auto& d : cdist) {
         file << time_to_str_utc(d.timestamp) << "," << time_to_us(d.timestamp) << ", " << d.value << "," << speed[i++].value << std::endl;
     }
-    
-    return passed;
 }
+*/
 
-
-static bool test_path_heading() {
-    auto passed = true;
-
-    std::cout << "Testing path_heading()" << std::endl;
-
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
-    passed &= value_test((int)path.size(), 6115);
+TEST_CASE("test_path_heading") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+    CHECK(value_test((int)path.size(), 6115));
     
     auto out = path_heading(path.begin(), path.end());
-    passed &= value_test(out.size(), 6114);
-    
-    out = smooth(out.begin(), out.end());
-    out = smooth(out.begin(), out.end());
-    out = smooth(out.begin(), out.end());
-    out = smooth(out.begin(), out.end());
-    
-    for (const auto i : out) {
-       // std::cout << i << std::endl;
-    }
-    
-    //out = first_central_difference(out.begin(), out.end());
-
-    for (const auto i : out) {
-      //  std::cout << i << std::endl;
-    }
-    
-    
-    return passed;
+    CHECK(value_test(out.size(), 6114));    
 }
 
 
-static bool test_find_closest_path_point_dist() {
-    auto passed = true;
-
-    std::cout << "Testing find_closest_path_point_dist()" << std::endl;
+TEST_CASE("test_find_closest_path_point_dist") {
     std::vector<path_point> path;
 
     location target {52.988201, -6.413192};
     
     // Test empty path
     auto out = find_closest_path_point_dist(path.begin(), path.end(), target);
-    passed &= iterator_test(out, path.end(), path.begin());
+    CHECK(iterator_test(out, path.end(), path.begin()));
     
     path = {
         { { 52.988201, -6.413192 } }, 
@@ -395,30 +333,25 @@ static bool test_find_closest_path_point_dist() {
     };
 
     out = find_closest_path_point_dist(path.begin(), path.end(), target);
-    passed &= iterator_test(out, path.begin() + 0, path.begin());
+    CHECK(iterator_test(out, path.begin() + 0, path.begin()));
 
     target = {52.988189, -6.413176};
     out = find_closest_path_point_dist(path.begin(), path.end(), target);
-    passed &= iterator_test(out, path.begin() + 3, path.begin());
+    CHECK(iterator_test(out, path.begin() + 3, path.begin()));
 
     target = {52.988179, -6.413166};
     out = find_closest_path_point_dist(path.begin(), path.end(), target);
-    passed &= iterator_test(out, path.begin() + 3, path.begin());
+    CHECK(iterator_test(out, path.begin() + 3, path.begin()));
 
     // last pos
     target = { 52.988119, -6.413208 };
     out = find_closest_path_point_dist(path.begin(), path.end(), target);
-    passed &= iterator_test(out, path.begin() + 6, path.begin());
-
+    CHECK(iterator_test(out, path.begin() + 6, path.begin()));
 }
 
 
-static test_find_stationary_points() {
-    auto passed = true;
-
-    std::cout << "Testing test_find_stationary_points()" << std::endl;
-
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
+TEST_CASE("test_find_stationary_points") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
     
     auto it = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
     
@@ -429,72 +362,92 @@ static test_find_stationary_points() {
     
     std::cout << "from: " << time_to_str_utc(it[0]->timestamp) << std::endl;
     std::cout << "to: " << time_to_str_utc(it[1]->timestamp) << std::endl;
-
 }
 
-static bool test_load_gpx_qd() {
-    auto passed = true;
-
-    std::cout << "Testing load_gpx_qd()" << std::endl;
-
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
-    passed &= value_test((int)path.size(), 6115);
+TEST_CASE("test_save_gpx_trk") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+    CHECK(value_test((int)path.size(), 6115));
     
+    auto ok = save_gpx_trk(make_data_path("test.gpx"), path.begin(), path.end());
+    CHECK(ok);
+    
+    auto path1 = load_gpx_trk(make_data_path("test.gpx"));
+    CHECK(value_test((int)path1.size(), 6115));
+}
+
+
+TEST_CASE("test_cardinal_direction") {
+
+    CHECK(value_test(cardinal_direction(1.0), "N"));
+    CHECK(value_test(cardinal_direction(45.0), "NE"));
+    CHECK(value_test(cardinal_direction(90.0), "E"));
+    CHECK(value_test(cardinal_direction(134.0), "SE"));
+    CHECK(value_test(cardinal_direction(180.0), "S"));
+    CHECK(value_test(cardinal_direction(215.0), "SW"));
+    CHECK(value_test(cardinal_direction(269.0), "W"));
+    CHECK(value_test(cardinal_direction(316.0), "NW"));
+    CHECK(value_test(cardinal_direction(324.0), "NW"));
+    CHECK(value_test(cardinal_direction(350.0), "N"));
+    CHECK(value_test(cardinal_direction(359.0), "N"));
+    CHECK(value_test(cardinal_direction(360.0), "N"));
+    CHECK(value_test(cardinal_direction(-20.0), "N"));
+}
+
+TEST_CASE("test_load_gpx_trk") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+
+    CHECK(value_test((int)path.size(), 6115));
+    
+    auto& first = path.front();
+    
+    CHECK(value_test(first.loc.lat, 52.988201, 0.000001));
+    CHECK(value_test(first.loc.lon, -6.413192, 0.000001));
+    CHECK(value_test(first.timestamp, str_to_time_utc("2022-05-07T10:20:06.433Z")));
+    CHECK(value_test(first.loc.ele, 165.56749, 0.000001));
+
+    auto& last = path.back();
+    CHECK(value_test(last.loc.lat, 52.988079, 0.000001));
+    CHECK(value_test(last.loc.lon, -6.413215, 0.000001));
+    CHECK(value_test(last.timestamp, str_to_time_utc("2022-05-07T15:43:38.000Z")));
+    CHECK(value_test(last.loc.ele, 170.38306, 0.000001));
+
+
     auto out = path_distance(path.begin(), path.end());
-    passed &= value_test(out, 16964, 1.0);  // 16.9Km
-        
-    return passed;
+    CHECK(value_test(out, 16964, 0.5));  // 16.9Km
 }
 
-static bool test_save_gpx_qd() {
-    auto passed = true;
+TEST_CASE("test_load_gpx_trk1") {
+    auto path = load_gpx_trk(make_data_path("knocknalogha_moot_25.gpx"));
+    
+    auto& first = path.front();
 
-    std::cout << "Testing save_gpx_qd()" << std::endl;
+    std::cout << "First: " << to_string(first.loc) << std::endl;
 
-    auto path = load_gpx_qd("table_mountain_loop.gpx");
+    CHECK(value_test(first.loc.lat, 52.25126, 0.000001));
+    CHECK(value_test(first.loc.lon, -7.96103, 0.000001));
+    CHECK(value_test(first.timestamp, str_to_time_utc("2025-11-15T12:10:55.054Z")));
+    CHECK(value_test(first.loc.ele, 263.5514879999982, 0.000001));
 
-    save_gpx_qd("test.gpx", path.begin(), path.end());
-        
-    return passed;
-}
-
-static bool test_load_csv_qd() {
-    auto passed = true;
-
-    std::cout << "Testing load_csv_qd()" << std::endl;
-
-    auto path = load_csv_qd("pass4_gps_track_log_24_08_2022.csv");
-
-    save_gpx_qd("test_gps_log.gpx", path.begin()+60, path.end());
-        
-    return passed;
+    auto& last = path.back();
+    CHECK(value_test(last.loc.lat, 52.25424, 0.000001));
+    CHECK(value_test(last.loc.lon, -7.96033, 0.000001));
+    CHECK(value_test(last.timestamp, str_to_time_utc("2025-11-15T17:08:05.052Z")));
+    CHECK(value_test(last.loc.ele, 179.0823679999559, 0.000001));
 }
 
 
-static bool test_cardinal_direction() {
-    auto passed = true;
+TEST_CASE("test_load_csv_qd") {
 
-    std::cout << "Testing cardinal_direction()" << std::endl;
+    auto path = load_csv_qd(make_data_path("pass4_gps_track_log_24_08_2022.csv"));
 
-    passed &= value_test(cardinal_direction(1.0), "N");
-    passed &= value_test(cardinal_direction(45.0), "NE");
-    passed &= value_test(cardinal_direction(90.0), "E");
-    passed &= value_test(cardinal_direction(134.0), "SE");
-    passed &= value_test(cardinal_direction(180.0), "S");
-    passed &= value_test(cardinal_direction(215.0), "SW");
-    passed &= value_test(cardinal_direction(269.0), "W");
-    passed &= value_test(cardinal_direction(316.0), "NW");
-    passed &= value_test(cardinal_direction(324.0), "NW");
-    passed &= value_test(cardinal_direction(350.0), "N");
-    passed &= value_test(cardinal_direction(359.0), "N");
-    passed &= value_test(cardinal_direction(360.0), "N");
-    passed &= value_test(cardinal_direction(-20.0), "N");
-            
-    return passed;
+    CHECK(value_test(path.size(), 2010));
+
+    save_gpx_trk("test_gps_log.gpx", path.begin()+60, path.end());
 }
 
+#if 0
 static void test_100m() {
-	auto path = load_gpx_qd("knocknalogha_moot_25.gpx");
+	auto path = load_gpx_trk_qd(make_data_path("knocknalogha_moot_25.gpx"));
 	std::cout << "Loaded " << path.size() << " points." << std::endl;
 	print_path_summary(path);
 	
@@ -512,7 +465,7 @@ static void test_100m() {
 	std::cout << "Section end: " << time_to_str_utc(s2->timestamp) << std::endl;
 	std::cout << "Section points: " << (s2 - s1) << std::endl;
 	
-	save_gpx_qd("./section.gpx", s1, s2);
+	save_gpx_trk_qd("./section.gpx", s1, s2);
 	
 	auto speed = path_speed(s1, s2);
 
@@ -539,34 +492,5 @@ static void test_100m() {
 	auto dist1 = path_distance(p3, p4);
 	
 	std::cout << "Distance 2: " << dist1 << std::endl;
-	
-	
 }
-
-int main() {
-
-	test_100m();
-	
-    auto tests_passed = true;
-    
-    tests_passed &= test_to_radians();
-    tests_passed &= test_to_degrees();
-    tests_passed &= test_ddm_to_dd();
-    tests_passed &= test_dd_to_ddm();
-    tests_passed &= test_str_to_time_utc();
-    tests_passed &= test_distance_vec();
-    tests_passed += test_heading();
-    tests_passed += test_distance();
-    tests_passed += test_path_distance();
-    tests_passed += test_path_distance_on_gpx();
-    tests_passed += test_path_cumulative_distance();
-    tests_passed += test_path_heading();
-    tests_passed += test_find_closest_path_point_dist();
-    tests_passed += test_cardinal_direction();
-    tests_passed += test_load_gpx_qd();
-    tests_passed += test_save_gpx_qd();
-    tests_passed += test_load_csv_qd();
-    tests_passed += test_find_stationary_points();
-
-    return tests_passed ? 0 : 1;
-}
+#endif
