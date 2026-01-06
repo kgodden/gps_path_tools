@@ -453,6 +453,7 @@ TEST_CASE("test_generate_path_summary") {
     CHECK(value_test(summary.start_time, time_to_str_utc(path.begin()->timestamp)));
     CHECK(value_test(summary.end_time, time_to_str_utc(path.end()->timestamp)));
     CHECK(value_test(summary.duration_s, duration_to_seconds(path.front().timestamp, path.back().timestamp)));
+    CHECK(value_test(summary.distance_m, path_distance(path.begin(), path.end())));
 }
 
 #if 0

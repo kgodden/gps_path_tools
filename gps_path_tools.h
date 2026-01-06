@@ -683,27 +683,21 @@ inline path_summary generate_path_summary(const path::const_iterator start_it, c
 // Prints out a summary of the given path to stdio.
 //
 inline void print_path_summary(const path& in) {
-	std::cout << "Number of points: " << in.size() << std::endl;
+
+    const auto summary = generate_path_summary(in.begin(), in.end());
+
+    std::cout << "Number of points: " << summary.points << std::endl;
 	
-	if (in.size() < 2) {
+	if (summary.points < 2) {
 		return;
 	}
-	
-	auto start = in.begin();
-	auto end = in.end();
-	
-	std::cout << "Start Time: " << time_to_str_utc(start->timestamp) << std::endl; 
-	std::cout << "End Time: " << time_to_str_utc(end->timestamp) << std::endl; 
-	std::cout << "Duration: " << duration_to_str(start->timestamp, (end - 1)->timestamp) << std::endl; 
-	
-	auto dist = path_distance(start, end);
-	
-	std::cout << "Distance: " << dist << "m" << std::endl;
-	
-	auto seconds = duration_to_seconds(start->timestamp, (end - 1)->timestamp);
-	auto speed = seconds > 0 ? dist / seconds : 0.0;
-	
-	std::cout << "Mean Speed: " << std::fixed << std::setprecision(1) << mps_to_kph(speed) << "kph" << std::endl;
+		
+	std::cout << "Start Time: " << summary.start_time << std::endl; 
+	std::cout << "End Time: " << summary.end_time << std::endl; 
+	std::cout << "Duration: " << summary.duration_s << "s" << std::endl; 
+		
+	std::cout << "Distance: " << summary.distance_m << "m" << std::endl;
+	std::cout << "Mean Speed: " << std::fixed << std::setprecision(1) << summary.mean_speed_kph << "kph" << std::endl;
 	
 	auto spoints = find_stationary_points(in.begin(), in.end(), 15.0, 3 * 60);
 	
