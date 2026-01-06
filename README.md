@@ -52,13 +52,13 @@ This is currently a work in progress, the currently implemented functions are:
 + ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
 + ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
 + ```find_stationary_points()``` - Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
-+ ```load_gpx_trk()``` - Loads a sequence of GPS locations in a GPX file into a GPS path - Quick and Dirty, very limited/work in progress.
++ ```load_gpx_trk()``` - Loads a sequence of GPS locations in a GPX file into a GPS path.
 + ```save_gpx_trk()``` - Saves a path to a GPX file as a <trk>.
 + ```smooth()``` - Smooths a vector of path values, for example speeds or distances etc.
 + ```first_forward_difference()``` - Calculates the First Forward Difference of a vector of path values to obtain its numerical derivative.
 + ```first_central_difference()``` - Calculates the First Central Difference of a vector of path values to obtain its numerical derivative.
 + ```generate_path_summary()``` - Generates a summary of the GPS path including Start Time, End Time, Durationm Distance etc. returns a **path_summary** struct 
-+ ```print_path_summary()``` - Generates and prints to STDIO a summary of the GPS path including Start Time, End Time, Durationm Distance etc.
++ ```print_path_summary()``` - Generates and prints to STDIO a summary of the GPS path including Start Time, End Time, Duration Distance etc.
 
 # Using from your project
 
