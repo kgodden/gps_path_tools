@@ -21,9 +21,6 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/path_tools_tests.exe",
-            "__args": [
-                "--test-case=test_load_gpx_trk"
-            ],
             "cwd": "${workspaceFolder}/build",
             "environment": [
                 {

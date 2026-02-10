@@ -15,9 +15,7 @@
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
 
-
 #include <iterator>
-#include <math.h>
 #include <chrono>
 #include <time.h>
 #include <vector>
@@ -25,7 +23,8 @@
 #include <regex>
 #include <iostream>
 #include <iomanip>
- 
+#include <cmath>
+
 namespace gps_path_tools {
 
 //
@@ -407,29 +406,27 @@ inline double heading(const location& l1, const location& l2) {
 //-------------- Path Functions -------------- 
 //
 
-inline double path_distance(const path::const_iterator start_it, const path::const_iterator end_it) {
+inline double path_distance(const path::const_iterator start, const path::const_iterator end) {
     
     double dist = 0.0;
     
     // If the sequence is empty, return 0
-    if (start_it == end_it)
+    if (start == end)
         return dist;
-
-    // iterator that is one past second last point.
-    auto end = std::prev(end_it);
     
     // If the sequence only has one location,
     // return 0
-    if (end == start_it)
+    if (std::distance(start, end) == 1) {
         return dist;
-    
+    }
+
     // Loop through from start to the second last
     // point accumulating the distances between
     // the point pairs.
-    for (auto i = start_it; i != end; ++i) {
-        const auto d = distance(i->loc, std::next(i)->loc); 
+    for (auto i = start; i != end - 1; ++i) {
+        const auto d = distance(i->loc, (i + 1)->loc); 
 
-        if (!isnan(d))
+        if (!std::isnan(d))
             dist += d;
     }
     
@@ -439,23 +436,23 @@ inline double path_distance(const path::const_iterator start_it, const path::con
 //
 // Calculates the nominal heading between each path location and the next location in the given path.
 //
-inline std::vector<path_value> path_heading(const path::iterator start_it, const path::iterator end_it) {
-        
-    if (std::distance(start_it, end_it) < 2)
-        return {};
+inline std::vector<path_value> path_heading(const path::const_iterator start, const path::const_iterator end) {
     
+    const auto count =  std::distance(start, end);
 
-    // iterator that is one past second last point.
-    auto end = std::prev(end_it);
+    if (count < 2) {
+        return {};
+    }
         
     std::vector<path_value> out;
-    out.reserve(std::distance(start_it, end));
+    out.reserve(count);
     
     // Loop through from start to the second last
     // point accumulating the heading between
     // the point pairs.
-    for (auto i = start_it; i != end; ++i) {
-        const auto h = heading(i->loc, std::next(i)->loc); 
+    const auto last = end - 1;
+    for (auto i = start; i != last; ++i) {
+        const auto h = heading(i->loc, (i + 1)->loc); 
 
         out.push_back({ h, i->timestamp });
     }
@@ -466,23 +463,23 @@ inline std::vector<path_value> path_heading(const path::iterator start_it, const
 // 
 // Calculates the mean speed between the pairs of locations in the given path.
 //
-inline std::vector<path_value> path_speed(const path::const_iterator start_it, const path::const_iterator end_it) {
+inline std::vector<path_value> path_speed(const path::const_iterator start, const path::const_iterator end) {
         
-    if (std::distance(start_it, end_it) < 2)
-        return {};
-    
+    const auto count = std::distance(start, end);
 
-    // iterator that is one past second last point.
-    auto end = std::prev(end_it);
-        
+    if (count < 2) {
+        return {};
+    }
+
     std::vector<path_value> out;
-    out.reserve(std::distance(start_it, end));
+    out.reserve(count);
     
     // Loop through from start to the second last
     // point accumulating the speed between
     // the point pairs.
-    for (auto i = start_it; i != end; ++i) {
-        const auto h = speed(i->loc, std::next(i)->loc, (double)std::chrono::duration_cast<std::chrono::microseconds>(std::next(i)->timestamp - i->timestamp).count() / 1E6); 
+    const auto last = end - 1;
+    for (auto i = start; i != last; ++i) {
+        const auto h = speed(i->loc, (i + 1)->loc, (double)std::chrono::duration_cast<std::chrono::microseconds>(std::next(i)->timestamp - i->timestamp).count() / 1E6); 
 
         out.push_back({ h, i->timestamp });
     }
@@ -493,25 +490,25 @@ inline std::vector<path_value> path_speed(const path::const_iterator start_it, c
 //
 // Sums up the location to location distances on the given path.
 //
-inline std::vector<path_value> path_cumulative_distance(const path::const_iterator start_it, const path::const_iterator end_it) {
+inline std::vector<path_value> path_cumulative_distance(const path::const_iterator start, const path::const_iterator end) {
         
-    if (std::distance(start_it, end_it) < 2)
-        return {};
-    
+    const auto count = std::distance(start, end);
 
-    // iterator that is one past second last point.
-    auto end = std::prev(end_it);
-        
+    if (count < 2) {
+        return {};
+    }
+
     std::vector<path_value> out;
-    out.reserve(std::distance(start_it, end));
+    out.reserve(count);
     
     double dist = 0.0;
     
     // Loop through from start to the second last
     // point accumulating the heading between
     // the point pairs.
-    for (auto i = start_it; i != end; ++i) {
-        const auto d = distance(i->loc, std::next(i)->loc); 
+    const auto last = end - 1;
+    for (auto i = start; i != last; ++i) {
+        const auto d = distance(i->loc, (i + 1)->loc); 
         dist += d;
         
         out.push_back({ dist, std::next(i)->timestamp });
@@ -523,17 +520,20 @@ inline std::vector<path_value> path_cumulative_distance(const path::const_iterat
 //
 // Finds the closest path point to the provided target location based on time.
 //
-inline path::iterator find_closest_path_point_time(const path::iterator start_it, const path::iterator end_it, path_time target_timestamp) {
+inline path::const_iterator find_closest_path_point_time(const path::const_iterator start, const path::const_iterator end, path_time target_timestamp) {
 
     // Check for empty/bad range
-    if (start_it == end_it)
-        return end_it;
+    if (start == end) {
+        return end;
+    }
 
-    auto closest = start_it;
-    auto smallest_time_delta = start_it->timestamp - target_timestamp;
-    
-    for (auto i = start_it; i != end_it; ++i) {
-        const auto delta = start_it->timestamp - target_timestamp;
+    // We assume that the points in the path are in ascending
+    // cronological order!
+    auto closest = start;
+    auto smallest_time_delta = std::abs((start->timestamp - target_timestamp).count());
+
+    for (auto i = start; i != end; ++i) {
+        const auto delta = std::abs((i->timestamp - target_timestamp).count());
         
         if (delta < smallest_time_delta) {
             smallest_time_delta = delta;
@@ -547,17 +547,17 @@ inline path::iterator find_closest_path_point_time(const path::iterator start_it
 //
 // Finds the closest path point to the provided target location based on distance.
 //
-inline path::iterator find_closest_path_point_dist(const path::iterator start_it, const path::iterator end_it, const location& target) {
+inline path::iterator find_closest_path_point_dist(const path::iterator start, const path::iterator end, const location& target) {
     
     // Check for empty/bad range
-    if (start_it == end_it)
-        return end_it;
+    if (start == end)
+        return end;
     
-    auto closest = start_it;
-    auto smallest_delta = distance(start_it->loc, target);
+    auto closest = start;
+    auto smallest_delta = std::abs(distance(start->loc, target));
     
-    for (auto i = start_it; i != end_it; ++i) {
-        const auto delta = distance(i->loc, target);;
+    for (auto i = start; i != end; ++i) {
+        const auto delta = std::abs(distance(i->loc, target));
         
         if (delta < smallest_delta) {
             smallest_delta = delta;

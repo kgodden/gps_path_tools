@@ -68,7 +68,8 @@ static bool value_test(double value, double target, double allowable_delta) {
             std::cout << "FAIL";
         }
         
-        std::cout << ", got: " << value << ", target: " << target << ", delta: " << (target - value )<< std::endl;
+        std::cout << ", got: " << std::fixed << std::setprecision(6) << value <<
+                ", target: " << target << ", delta: " << (target - value )<< std::endl;
         
         return pass;
 }
@@ -312,6 +313,20 @@ TEST_CASE("test_path_heading") {
     CHECK(value_test(out.size(), 6114));    
 }
 
+TEST_CASE("test_find_closest_path_point_time") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+
+    auto time = str_to_time_utc("2022-05-07T10:20:31.000Z");
+
+    std::cout << "++" << time_to_str_utc(time);
+
+    auto closest = find_closest_path_point_time(path.begin(), path.end(), time);
+
+    // lat="52.988102" lon="-6.413273"
+    CHECK(value_test(closest->loc.lat, 52.988102, 0.000001));
+    CHECK(value_test(closest->loc.lon, -6.413273, 0.000001));
+
+}
 
 TEST_CASE("test_find_closest_path_point_dist") {
     std::vector<path_point> path;
@@ -478,7 +493,7 @@ static void test_100m() {
 	
 	save_gpx_trk_qd("./section.gpx", s1, s2);
 	
-	auto speed = path_speed(s1, s2);
+	auto speed = path_speed(path_span(&*s1, s2 - s1));
 
 	std::cout << "Speed points: " << speed.size() << std::endl;
 	
@@ -493,14 +508,14 @@ static void test_100m() {
 	auto p1 = s1 + 8 - 1;
 	auto p2 = s1 + 23;
 	
-	auto dist = path_distance(p1, p2);
+	auto dist = path_distance(std::span(path).subspan(p1, p2 - p1));
 	
 	std::cout << "Distance 1: " << dist << std::endl;
 	
 	auto p3 = s1 + 26 - 1;
 	auto p4 = s1 + 42 + 1;
 	
-	auto dist1 = path_distance(p3, p4);
+	auto dist1 = path_distance(std::span(path).subspan(p3, p4 - p3));
 	
 	std::cout << "Distance 2: " << dist1 << std::endl;
 }
