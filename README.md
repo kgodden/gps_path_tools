@@ -247,7 +247,7 @@ void closest_path_point() {
 void find_farthest_point() {
     auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
 
-    // Find the farthest point from the start pf the path across the whole path
+    // Find the farthest point from the start of the path across the whole path
     auto farthest = find_farthest_point(path.begin(), path.end(), path.begin()->loc);
 
     std::cout << "The farthest point from the path start is point #"
