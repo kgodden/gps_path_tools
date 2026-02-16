@@ -45,6 +45,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```distance()``` - Calculates the Haversine distance between two GPS locations in meters.
 + ```distance_vec()``` - Calculates the 'Great Circle' distance between two GPS locations using vector normals.
 + ```path_distance()``` - Calculates the piecewise haversine distance of a path made up of a sequence of GPS locations in meters.
++ ```axis_aligned_bounding_box()``` - Calculates the four corners of a GPS path's bounding box, the box is aligned to NS/EW
 + ```heading_gc()``` - Calculates the initial heading or course given two GPS locations.
 + ```path_heading()``` - Calculates the nominal heading between each path location and the next location in the given path.
 + ```path_speed()``` - Calculates the mean speed between the pairs of locations in the given path.
@@ -215,6 +216,38 @@ void path_distance_from_gpx() {
     auto distance = path_distance(path.begin(), path.end());
 
     std::cout << "The piece-wise distance along the path is " << distance << "m" << std::endl;
+}
+```
+## Calculate the a GPS path's bounding box.
+
+```cpp
+// Loads a GPS path from a GPX file, calculates its bounding box,
+// prints some details and then adds the box corners to the original path
+// and saves it to a GPX file so that it can be viewed
+//
+void axis_aligned_bounding_box() {
+    auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
+
+    // Get the corners of the path's axis-aligned 
+    // bounding box.
+    auto [nw, ne, se, sw] = axis_aligned_bounding_box(path.begin(), path.end());
+
+    auto we_length = distance(nw, ne);
+    auto ns_length = distance(nw, sw);
+
+    std::cout << "Bounding box corners NW: " << to_string(nw) << ", SE: " << to_string(se) <<
+            ", NS length (m): " << ns_length << ", WE length (m): " << we_length << std::endl; 
+    
+    // Add the corner points onto the end of
+    // the path so that we can save it as GPX
+    // and load it to view the path and bounding box.
+    path.push_back({ nw });
+    path.push_back({ ne });
+    path.push_back({ se });
+    path.push_back({ sw });
+    path.push_back({ nw });
+
+    save_gpx_trk("al_bounding_box.gpx", path.begin(), path.end());
 }
 ```
 
