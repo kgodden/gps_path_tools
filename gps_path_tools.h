@@ -359,7 +359,10 @@ inline double distance(const location& l1, const location& l2) {
     // see these pages for a nice background to haversine:
     // https://plus.maths.org/content/lost-lovely-haversine
     // https://www.movable-type.co.uk/scripts/latlong.html
-    
+    //
+    // computed distance is >= 0, i.e. no -ve distances.
+    //
+
     // Convert degrees to radians
     double lat1 = to_radians(l1.lat);
     double lon1 = to_radians(l1.lon);
@@ -405,6 +408,42 @@ inline double heading(const location& l1, const location& l2) {
 //
 //-------------- Path Functions -------------- 
 //
+
+//
+// Calculate axis-aligned bounding box if path given
+// start and end iterators.
+//
+// return: { NW box corner, NE, SE, SW }
+//
+inline std::tuple<location, location, location, location> axis_aligned_bounding_box(const path::const_iterator start, const path::const_iterator end) {
+  
+    // Empty sequence?
+    if (start == end) {
+        return {};
+    }
+
+    double min_lat = start->loc.lat;
+    double max_lat = start->loc.lat;
+    double min_lon = start->loc.lon;
+    double max_lon = start->loc.lon;
+
+    for (auto i = start; i != end; ++i) {
+        const auto& loc = i->loc;
+
+        min_lat = std::min(min_lat, loc.lat);
+        max_lat = std::max(max_lat, loc.lat);
+
+        min_lon = std::min(min_lon, loc.lon);
+        max_lon = std::max(max_lon, loc.lon);
+    }
+
+    location nw { max_lat, min_lon };
+    location ne { max_lat, max_lon };
+    location se { min_lat, max_lon };
+    location sw { min_lat, min_lon };
+
+    return { nw, ne, se, sw };
+}
 
 inline double path_distance(const path::const_iterator start, const path::const_iterator end) {
     
