@@ -52,6 +52,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
 + ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
 + ```find_stationary_points()``` - Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
++ ```find_farthest_point()``` - Finds the point on a path that is the farthest away (as the crow flies) from a given location.
 + ```load_gpx_trk()``` - Loads a sequence of GPS locations in a GPX file into a GPS path.
 + ```save_gpx_trk()``` - Saves a path to a GPX file as a <trk>.
 + ```smooth()``` - Smooths a vector of path values, for example speeds or distances etc.
