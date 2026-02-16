@@ -108,6 +108,16 @@ void find_closest_path_point_time() {
     }
 }
 
+void find_farthest_point() {
+    auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
+
+    // Find the farthest point from the start pf the path across the whole path
+    auto farthest = find_farthest_point(path.begin(), path.end(), path.begin()->loc);
+
+    std::cout << "The farthest point from the path start is point #"
+            << (farthest - path.begin()) << " at " << to_string(farthest->loc) <<
+            ", it is " << distance(path.begin()->loc, farthest->loc) << "m away from the start.";
+}
 
 int main(int, char**) {
     haversine_distance();
@@ -118,6 +128,7 @@ int main(int, char**) {
     closest_path_point();
     cardinal_direction();
     find_closest_path_point_time();
-    
+    find_farthest_point();
+
     return 1;
 }
