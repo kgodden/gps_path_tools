@@ -241,6 +241,20 @@ void closest_path_point() {
     std::cout << "The closest point on the path to  " << to_string(target) << " is " << to_string(closest->loc) << ", it is " << dist << "m away" << std::endl; 
 }
 ```
+## Find the point on a path that is farthest from a given location
+
+```cpp
+void find_farthest_point() {
+    auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
+
+    // Find the farthest point from the start of the path across the whole path
+    auto farthest = find_farthest_point(path.begin(), path.end(), path.begin()->loc);
+
+    std::cout << "The farthest point from the path start is point #"
+            << (farthest - path.begin()) << " at " << to_string(farthest->loc) <<
+            ", it is " << distance(path.begin()->loc, farthest->loc) << "m away from the start.";
+}
+```
 
 ## Get Cardinal Direction from bearing and back-bearing
 
