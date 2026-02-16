@@ -83,12 +83,12 @@ void find_stationary_points() {
     // Find the first stationary segment on the path, here we are deemed as
     // stationary if we stay within a 10m radius for 2 minutes.  Will return
     // an iterator to the first and last points in the stationary path segment.
-    auto stat = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
+    auto [start, end] = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
     
-    if (stat.size() > 0) {
-        auto time0 = stat[0]->timestamp;
-        auto time1 = stat[1]->timestamp;
-        auto location = stat[0]->loc;
+    if (start != path.end() && end != path.end()) {
+        auto time0 = start->timestamp;
+        auto time1 = end->timestamp;
+        auto location = start->loc;
         
         std::cout << "Stationary near " << to_string(location) << std::endl;
         std::cout << "From: " << time_to_str_utc(time0) << std::endl;

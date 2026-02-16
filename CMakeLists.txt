@@ -4,6 +4,8 @@ project(path_tools_examples LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+message(STATUS "CMake build type: ${CMAKE_BUILD_TYPE}")
+
 add_executable(path_tools_tests
     test/test_gps_path_tools.cpp
 )

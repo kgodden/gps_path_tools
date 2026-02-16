@@ -570,26 +570,39 @@ inline path::iterator find_closest_path_point_dist(const path::iterator start, c
 
 //
 // Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
+// Returns a tuple of iterators representing the start and end points of the "stationary" region.
 //
-inline std::vector<path::const_iterator> find_stationary_points(const path::const_iterator start_it, const path::const_iterator end_it, const int radius_m, const int time_s) {
+// TODO: if a stationary region occurs at the end of a path it won';'t be returned.
+//
+inline std::tuple<path::const_iterator, path::const_iterator> find_stationary_points(const path::const_iterator start_it, const path::const_iterator end_it, const int radius_m, const int time_s) {
     // Find the points where successive distance travelled values
     // does not go further than radius_m
     
     auto start = start_it;
-    int stationary_count = 0;
     bool time_ok = false;
-    
-    for (auto i = start_it; i != std::prev(end_it); ++i) {
+    const auto end = std::prev(end_it);
+
+    for (auto i = start_it; i != end; ++i) {
         const auto next = std::next(i);
+    
+        // The distance between the last candidate start location
+        // and this location.
         const auto delta = distance(start->loc, next->loc);
         
+        // Is this distance within our "stationary" circle?
         if (delta < radius_m) {
-                        
+            // yes, and is the time difference large enough such that
+            // we can expect a reasonable distance travelled and so count 
+            // this as a stationary region?            
             if (i->timestamp - start->timestamp >  std::chrono::seconds(time_s)) {
                 time_ok = true;
             }
         } else {
 
+            // We are now outside the circle, if the last time delta
+            // was greater than our filter then we are on the move
+            // again so return the start and end iterators of the
+            // "stationary" region.
             if (time_ok) {
                 return { start, i };
             }
@@ -600,6 +613,32 @@ inline std::vector<path::const_iterator> find_stationary_points(const path::cons
     
     // none found
     return { end_it, end_it };
+}
+
+//
+// Finds the path location that is farthest (as the crow files) from the location
+// specified by the "from" argument.  If there are multiple locations with the same maximum
+// distance then it returns the first.
+//
+inline path::const_iterator find_farthest_point(const path::const_iterator start, const path::const_iterator end, const location& from) {
+
+    // Empty sequence
+    if (start == end || start > end) {
+        return end;
+    }
+
+    path::const_iterator farthest = start;
+    double max_dist = 0;
+    
+    for (auto i = start; i != end; ++i) {
+        auto dist = distance(from, i->loc);
+        if (dist > max_dist) {
+            max_dist = dist;
+            farthest = i;
+        }
+    }
+
+    return farthest;
 }
 
 //
@@ -674,6 +713,14 @@ inline path_summary generate_path_summary(const path::const_iterator start_it, c
     return summary;
 }
 
+class stopwatch {
+    std::chrono::time_point<std::chrono::steady_clock> start;
+
+public:
+
+    stopwatch() : start(std::chrono::steady_clock::now()) {}
+    size_t elapsed_us() { return std::chrono::duration_cast<std::chrono::microseconds>((std::chrono::steady_clock::now() - start)).count(); }
+};
 
 //
 //-------------- I/O Functions -------------- 
@@ -699,13 +746,15 @@ inline void print_path_summary(const path& in) {
 	std::cout << "Distance: " << summary.distance_m << "m" << std::endl;
 	std::cout << "Mean Speed: " << std::fixed << std::setprecision(1) << summary.mean_speed_kph << "kph" << std::endl;
 	
-	auto spoints = find_stationary_points(in.begin(), in.end(), 15.0, 3 * 60);
+    // Stationary if we don't move more than 15m in a 3 minute period.
+	auto [start, end] = find_stationary_points(in.begin(), in.end(), 15.0, 3 * 60);
 	
-	std::cout << "Stationary points " << spoints.size() << std::endl;
-	
-	for (const auto p : spoints) {
-		std::cout << "Time: " << time_to_str_utc(p->timestamp) << std::endl;
-	}
+    if (start == end) {
+    	std::cout << "No Stationary regions" << std::endl;
+    } else {
+        std::cout << "Stationary region from " << time_to_str_utc(start->timestamp) <<
+                 " to " << time_to_str_utc(end->timestamp) << std::endl;        
+    }
 }
 
 // Quick and Dirty (qd) write path segment to .gpx

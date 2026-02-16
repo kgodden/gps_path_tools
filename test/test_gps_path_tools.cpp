@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
+#include <iterator>
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
@@ -368,15 +369,15 @@ TEST_CASE("test_find_closest_path_point_dist") {
 TEST_CASE("test_find_stationary_points") {
     auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
     
-    auto it = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
+    auto [start, end] = find_stationary_points(path.begin(), path.end(), 10, 2 * 60);
     
-    std::cout << "from: " << time_to_str_utc(it[0]->timestamp) << std::endl;
-    std::cout << "to: " << time_to_str_utc(it[1]->timestamp) << std::endl;
+    std::cout << "from: " << time_to_str_utc(start->timestamp) << std::endl;
+    std::cout << "to: " << time_to_str_utc(end->timestamp) << std::endl;
     
-    it = find_stationary_points(it[1], path.end(), 10, 2 * 60);
+    auto [start1, end1] = find_stationary_points(end, path.end(), 10, 2 * 60);
     
-    std::cout << "from: " << time_to_str_utc(it[0]->timestamp) << std::endl;
-    std::cout << "to: " << time_to_str_utc(it[1]->timestamp) << std::endl;
+    std::cout << "from: " << time_to_str_utc(start1->timestamp) << std::endl;
+    std::cout << "to: " << time_to_str_utc(end1->timestamp) << std::endl;
 }
 
 TEST_CASE("test_save_gpx_trk") {
@@ -469,6 +470,31 @@ TEST_CASE("test_generate_path_summary") {
     CHECK(value_test(summary.end_time, time_to_str_utc(path.end()->timestamp)));
     CHECK(value_test(summary.duration_s, duration_to_seconds(path.front().timestamp, path.back().timestamp)));
     CHECK(value_test(summary.distance_m, path_distance(path.begin(), path.end())));
+}
+
+TEST_CASE("test_find_farthest_point") {
+    {
+        // Test for empty path
+        path path = {};
+        auto farthest = find_farthest_point(path.begin(), path.end(), { 52.9827588546699, -6.040081945988319 });
+        CHECK(farthest == path.end());
+    }
+
+    {
+        // Test for path with one location
+        // Should return an iterator to the single element
+        path path = { { 52.9827588546699, -6.040081945988319 }};
+        auto farthest = find_farthest_point(path.begin(), path.end(), path.begin()->loc);
+        CHECK(farthest == path.begin());
+    }
+
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+
+    {
+        auto farthest = find_farthest_point(path.begin(), path.end(), path.begin()->loc);
+        auto val = distance(path.begin()->loc, farthest->loc);
+        CHECK(farthest - path.begin() == 4048);
+    }
 }
 
 #if 0
