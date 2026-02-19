@@ -49,7 +49,7 @@ struct location {
     double lon;
 
     // Elevation
-    double ele;
+    double ele = {};
 };
 
 typedef std::chrono::time_point<std::chrono::system_clock> path_time;
@@ -57,8 +57,8 @@ typedef std::chrono::time_point<std::chrono::system_clock> path_time;
 // Represents a point on a path or sequence of GPS locations.
 struct path_point {
     location loc;
-    path_time timestamp;
-    int sequence;
+    path_time timestamp = {};
+    int sequence = {};
 };
 
 // represents a value at some point along 
@@ -246,7 +246,7 @@ inline std::string duration_to_str(const path_time t1, const path_time t2) {
 //
 inline double duration_to_seconds(const path_time t1, const path_time t2) {
 	auto delta = t2 - t1;
-	return std::chrono::duration_cast<std::chrono::seconds>(delta).count();
+	return static_cast<double>(std::chrono::duration_cast<std::chrono::seconds>(delta).count());
 }
 
 //
@@ -302,10 +302,10 @@ inline const char* cardinal_direction(double bearing) {
         bearing += 360;
     
     int closest_index = 0;
-    int closest_delta = fabs(cardinals[0].angle - bearing);
+    int closest_delta = static_cast<int>(fabs(cardinals[0].angle - bearing));
     
     for (int i = 0; i != 9; ++i) {
-        int delta = fabs(cardinals[i].angle - bearing);
+        int delta = static_cast<int>(fabs(cardinals[i].angle - bearing));
         
         if (delta < closest_delta) {
                 closest_delta = delta;
@@ -484,7 +484,7 @@ inline std::vector<path_value> path_heading(const path::const_iterator start, co
     }
         
     std::vector<path_value> out;
-    out.reserve(count);
+    out.reserve(static_cast<size_t>(count));
     
     // Loop through from start to the second last
     // point accumulating the heading between
@@ -511,7 +511,7 @@ inline std::vector<path_value> path_speed(const path::const_iterator start, cons
     }
 
     std::vector<path_value> out;
-    out.reserve(count);
+    out.reserve(static_cast<size_t>(count));
     
     // Loop through from start to the second last
     // point accumulating the speed between
@@ -538,7 +538,7 @@ inline std::vector<path_value> path_cumulative_distance(const path::const_iterat
     }
 
     std::vector<path_value> out;
-    out.reserve(count);
+    out.reserve(static_cast<size_t>(count));
     
     double dist = 0.0;
     
@@ -681,6 +681,61 @@ inline path::const_iterator find_farthest_point(const path::const_iterator start
 }
 
 //
+//-------------- Elevation Path Functions -------------- 
+//
+
+//
+// Calculate some elevation stats for the path, returns:
+//
+// { iterator to location with min elevation, iterator to max elevation,
+//    cumulative ascent over path, cumulative descent over path (-ve) }
+//
+std::tuple<path::const_iterator, path::const_iterator, double, double> path_elevation_summary(const path::const_iterator start, const path::const_iterator end) {
+    const auto count =  std::distance(start, end);
+
+    if (count < 2) {
+        return {};
+    }
+
+    // Current min/max
+    double min_elevation = start->loc.ele;
+    double max_elevation = start->loc.ele;
+
+    // Iterators to the min/max elevations
+    auto min_it = start;
+    auto max_it = start;
+    
+    double cumulative_ascent = 0.0;
+    double cumulative_descent = 0.0;
+    double last_ele = start->loc.ele;
+
+    for (auto i = start; i != end; ++i) {
+
+        // Is this a min/max?
+        if (i->loc.ele > max_elevation) {
+            max_it = i;
+            max_elevation = i->loc.ele;
+        } else if (i->loc.ele < min_elevation) {
+            min_it = i;
+            min_elevation = i->loc.ele;
+        }
+
+        // Accrue ascent or descent
+        auto delta_ele = i->loc.ele - last_ele;
+        last_ele = i->loc.ele;
+
+        if (delta_ele >= 0) {
+            cumulative_ascent += delta_ele;
+        } else {
+            cumulative_descent += delta_ele;
+        }
+    }
+
+    return { min_it, max_it, cumulative_ascent, cumulative_descent };
+}
+
+
+//
 //-------------- Helper Functions -------------- 
 //
 
@@ -689,7 +744,7 @@ inline std::vector<path_value> smooth(const std::vector<path_value>::const_itera
         return {};
         
     std::vector<path_value> out;
-    out.reserve(std::distance(start_it, end_it) - 2);
+    out.reserve(static_cast<size_t>(std::distance(start_it, end_it) - 2));
     
     for (auto i = start_it; i != std::prev(end_it); ++i) {
             // Triangular filter
@@ -706,7 +761,7 @@ inline std::vector<path_value> first_forward_difference(const std::vector<path_v
         return {};
         
     std::vector<path_value> out;
-    out.reserve(std::distance(start_it, end_it) - 2);
+    out.reserve(static_cast<size_t>(std::distance(start_it, end_it) - 2));
     
     for (auto i = start_it; i != std::prev(end_it); ++i) {
             const double val = std::next(i)->value - std::prev(i)->value; 
@@ -721,7 +776,7 @@ inline std::vector<path_value> first_central_difference(const std::vector<path_v
         return {};
         
     std::vector<path_value> out;
-    out.reserve(std::distance(start_it, end_it) - 2);
+    out.reserve(static_cast<size_t>(std::distance(start_it, end_it) - 2));
     
     for (auto i = std::next(start_it); i != std::prev(end_it); ++i) {
             const double val = (std::next(i)->value - std::prev(i)->value) / 2.0;
@@ -734,7 +789,7 @@ inline std::vector<path_value> first_central_difference(const std::vector<path_v
 inline path_summary generate_path_summary(const path::const_iterator start_it, const path::const_iterator end_it) {
     path_summary summary{};
 
-    summary.points = std::distance(start_it, end_it);
+    summary.points = static_cast<size_t>(std::distance(start_it, end_it));
 	
 	if (summary.points < 2) {
 		return summary;
@@ -758,7 +813,9 @@ class stopwatch {
 public:
 
     stopwatch() : start(std::chrono::steady_clock::now()) {}
-    size_t elapsed_us() { return std::chrono::duration_cast<std::chrono::microseconds>((std::chrono::steady_clock::now() - start)).count(); }
+    long long elapsed_us() {
+        return std::chrono::duration_cast<std::chrono::microseconds>((std::chrono::steady_clock::now() - start)).count();
+    }
 };
 
 //

@@ -99,6 +99,7 @@ void find_stationary_points() {
     }
 }
 
+/*
 void find_closest_path_point_time() {
 
     // Load GPX
@@ -107,6 +108,7 @@ void find_closest_path_point_time() {
  //       std::cout << pp.timestamp << std::endl;
     }
 }
+*/
 
 void find_farthest_point() {
     auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
@@ -156,7 +158,7 @@ int main(int, char**) {
     path_distance_from_gpx();
     closest_path_point();
     cardinal_direction();
-    find_closest_path_point_time();
+    //find_closest_path_point_time();
     find_farthest_point();
     axis_aligned_bounding_box();
 

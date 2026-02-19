@@ -536,6 +536,19 @@ TEST_CASE("test_axis_aligned_bounding_box") {
     }
 }
 
+//
+// GPS Elevations are quite inexact so only test to nearest metre
+//
+TEST_CASE("test_path_elevation_summary") {
+    auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+    auto [min_it, max_it, cumulative_ascent, cumulative_descent] = path_elevation_summary(path.begin(), path.end());
+    CHECK(value_test(max_it->loc.ele, 799, 1));
+    CHECK(value_test(min_it->loc.ele, 157, 1));
+    CHECK(value_test(cumulative_ascent, 951, 1));
+    CHECK(value_test(cumulative_descent, -946, 1));
+
+    std::cout << "UP: " << cumulative_ascent << ", DOWN: " << cumulative_descent << std::endl;
+}
 
 #if 0
 static void test_100m() {

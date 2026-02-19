@@ -21,6 +21,7 @@ enum class gpx_state {
     have_closing_tag,
 };
 
+/*
 static std::string trimw(const std::string_view s) {
     static const char* whitespace = " \t\n\r\f\v";
 
@@ -32,6 +33,7 @@ static std::string trimw(const std::string_view s) {
 
     return std::string(s.substr(start, end - start));
 }
+*/
 
 path load_gpx_trk(const std::string& filename) {
 

@@ -14,6 +14,11 @@ add_executable(path_tools_examples
     examples/path_tools_examples.cpp
 )
 
+target_compile_options(path_tools_examples PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic -Wconversion>
+)
+
 if(MINGW)
     set(CMAKE_EXE_LINKER_FLAGS "")
     set(CMAKE_MODULE_LINKER_FLAGS "")
