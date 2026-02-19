@@ -75,6 +75,22 @@ static bool value_test(double value, double target, double allowable_delta) {
         return pass;
 }
 
+static bool value_test(location value, location target, double allowable_delta) {
+        auto pass_lat = almost_equal(value.lat, target.lat, allowable_delta);
+        auto pass_lon = almost_equal(value.lon, target.lon, allowable_delta);
+
+        if (pass_lat && pass_lon) {
+            std::cout << "PASS";
+        } else {
+            std::cout << "FAIL";
+        }
+        
+        std::cout << ", got: " << to_string(value) <<
+                ", target: " << to_string(target) << allowable_delta << allowable_delta << std::endl;
+        
+        return pass_lat && pass_lon;
+}
+
 static bool value_test(path_time value, path_time target) {
         auto pass = value == target;
 
@@ -496,6 +512,30 @@ TEST_CASE("test_find_farthest_point") {
         CHECK(farthest - path.begin() == 4048);
     }
 }
+
+TEST_CASE("test_axis_aligned_bounding_box") {
+
+    {
+        auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
+        auto [nw, ne, se, sw] = axis_aligned_bounding_box(path.begin(), path.end());
+        CHECK(value_test(nw, {53.012728, -6.479940}, 0.000001));
+        CHECK(value_test(ne, {53.012728, -6.413156}, 0.000001));
+        CHECK(value_test(se, {52.979075, -6.413156}, 0.000001));
+        CHECK(value_test(sw, {52.979075, -6.479940}, 0.000001));
+    }
+
+    // Check empty path
+    // Currently "Zeros" are returned for an empty path
+    {
+        path path = {};
+        auto [nw, ne, se, sw] = axis_aligned_bounding_box(path.begin(), path.end());
+        CHECK(value_test(nw, {0.0, 0.0}, 0.000001));
+        CHECK(value_test(ne, {0.0, 0.0}, 0.000001));
+        CHECK(value_test(se, {0.0, 0.0}, 0.000001));
+        CHECK(value_test(sw, {0.0, 0.0}, 0.000001));
+    }
+}
+
 
 #if 0
 static void test_100m() {

@@ -119,6 +119,10 @@ void find_farthest_point() {
             ", it is " << distance(path.begin()->loc, farthest->loc) << "m away from the start." << std::endl;
 }
 
+// Loads a GPS path from a GPX file, calculates its bounding box,
+// prints some details and then adds the box corners to the original path
+// and saves it to a GPX file so that it can be viewed
+//
 void axis_aligned_bounding_box() {
     auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
 
