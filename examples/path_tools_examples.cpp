@@ -150,6 +150,18 @@ void axis_aligned_bounding_box() {
     save_gpx_trk("al_bounding_box.gpx", path.begin(), path.end());
 }
 
+void path_elevation_summary() {
+
+    auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
+    auto [min_it, max_it, cumulative_ascent, cumulative_descent] = path_elevation_summary(path.begin(), path.end());
+
+    std::cout << "The lowest point on the path is " << min_it->loc.ele << "m above sea level at path point #" << min_it - path.begin() << std::endl;
+    std::cout << "The highest point on the path is " << max_it->loc.ele << "m above sea level at path point #"  << max_it - path.begin() << std::endl;
+    
+    std::cout << "Total climb on path: " << cumulative_ascent << "m" << std::endl;
+    std::cout << "Total descent on path: " << cumulative_ascent << "m" << std::endl;
+}
+
 int main(int, char**) {
     haversine_distance();
     find_stationary_points();
@@ -161,6 +173,7 @@ int main(int, char**) {
     //find_closest_path_point_time();
     find_farthest_point();
     axis_aligned_bounding_box();
+    path_elevation_summary();
 
     return 1;
 }
