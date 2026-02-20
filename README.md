@@ -332,4 +332,19 @@ void find_stationary_points() {
 	}
 }
 ```
+## Calculate some Elevation Statistics for the Path
+This example loads a path from a GPX file and then finds the points on the path with the lowest and highest elevation, as well as calculating the cumulative ascent and descent across the path, all heights in meters above sea level (MSL).
 
+```cpp
+void path_elevation_summary() {
+
+    auto path = load_gpx_trk("../examples/table_mountain_loop.gpx");
+    auto [min_it, max_it, cumulative_ascent, cumulative_descent] = path_elevation_summary(path.begin(), path.end());
+
+    std::cout << "The lowest point on the path is " << min_it->loc.ele << "m above sea level at path point #" << min_it - path.begin() << std::endl;
+    std::cout << "The highest point on the path is " << max_it->loc.ele << "m above sea level at path point #"  << max_it - path.begin() << std::endl;
+    
+    std::cout << "Total climb on path: " << cumulative_ascent << "m" << std::endl;
+    std::cout << "Total descent on path: " << cumulative_ascent << "m" << std::endl;
+}
+```
