@@ -6,7 +6,7 @@ GPS Path Tools code - A collection of C++ tools & functions for working with GPS
 This is intended to be a fairly simple collection of functions to help working with GPS coordinates, positions and paths, its main aims are:
 
 + Provide some useful & simple tools for working with GPS positions and Paths for solving everyday problems.
-+ Not to use any fancy/confusing C++ methods or tricks - use simple types and prioritise code readibility over code 'sophistication'
++ Not to use any fancy/confusing C++ methods or tricks - use simple types and prioritise code readability over code 'sophistication'
 + Have no dependencies other than the standard C++ lib.
 + Use via a single include of a header file.
 
@@ -52,7 +52,7 @@ This is currently a work in progress, the currently implemented functions are:
 + ```path_distance()``` - Sums up the location to location distances on the given path.
 + ```find_closest_path_point_dist()``` - Finds the closest path point to the provided target location based on distance.
 + ```find_closest_path_point_time()``` - Finds the closest path point to the provided target time based on time.
-+ ```find_stationary_points()``` - Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
++ ```find_stationary_points()``` - Finds the first region within a path where progress halted, i.e. where the traveler 'stopped'.
 + ```find_farthest_point()``` - Finds the point on a path that is the farthest away (as the crow flies) from a given location.
 + ```path_elevation_summary()``` - Calculates some elevation statistics for the path, returns iterators to the locations with min&max elevation, calculates cumulative ascent and descent.
 + ```load_gpx_trk()``` - Loads a sequence of GPS locations in a GPX file into a GPS path.
@@ -60,12 +60,12 @@ This is currently a work in progress, the currently implemented functions are:
 + ```smooth()``` - Smooths a vector of path values, for example speeds or distances etc.
 + ```first_forward_difference()``` - Calculates the First Forward Difference of a vector of path values to obtain its numerical derivative.
 + ```first_central_difference()``` - Calculates the First Central Difference of a vector of path values to obtain its numerical derivative.
-+ ```generate_path_summary()``` - Generates a summary of the GPS path including Start Time, End Time, Durationm Distance etc. returns a **path_summary** struct 
++ ```generate_path_summary()``` - Generates a summary of the GPS path including Start Time, End Time, Duration Distance etc. returns a **path_summary** struct 
 + ```print_path_summary()``` - Generates and prints to STDIO a summary of the GPS path including Start Time, End Time, Duration Distance etc.
 
 # Using from your project
 
-To use gps_path_tools from your project just include the headerfiles:
+To use gps_path_tools from your project just include the header files:
 
 For the GPS path functions include: **gps_path_tools.h**
 For Reading and writing GPS files include: **gps_path_io.h**
@@ -134,7 +134,7 @@ struct path_value {
     path_time timestamp;
 };
 ```
-+ path_summary - A struct that holds some path summary data, retruned by **generate_path_summary()**
++ path_summary - A struct that holds some path summary data, returned by **generate_path_summary()**
 
 ```cpp
 // Holds some path summary data, use

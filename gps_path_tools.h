@@ -1,6 +1,4 @@
 
-#pragma once
-
 //   Copyright 2022 Kevin Godden
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,8 @@
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //   See the License for the specific language governing permissions and
 //   limitations under the License.
+
+#pragma once
 
 #include <iterator>
 #include <chrono>
@@ -124,7 +124,7 @@ inline double ddm_to_dd(const double ddm) {
     return decimal_degrees;
 }
 
-// Convert from metres per second to kilometres
+// Convert from metres per second to kilometers
 // per hour.
 inline double mps_to_kph(const double mps) {
     return mps * 3.6;
@@ -173,7 +173,7 @@ namespace internal {
 }
 
 #endif
-// Convert from kilometres per hour to metres per second
+// Convert from kilometers per hour to metres per second
 inline double kph_to_mps(const double kph) {
     return kph / 3.6;
 }
@@ -567,7 +567,7 @@ inline path::const_iterator find_closest_path_point_time(const path::const_itera
     }
 
     // We assume that the points in the path are in ascending
-    // cronological order!
+    // chronological order!
     auto closest = start;
     auto smallest_time_delta = std::abs((start->timestamp - target_timestamp).count());
 
@@ -608,13 +608,13 @@ inline path::iterator find_closest_path_point_dist(const path::iterator start, c
 }
 
 //
-// Finds the first region within a path where progress halted, i.e. where the traveller 'stopped'.
+// Finds the first region within a path where progress halted, i.e. where the traveler 'stopped'.
 // Returns a tuple of iterators representing the start and end points of the "stationary" region.
 //
 // TODO: if a stationary region occurs at the end of a path it won';'t be returned.
 //
 inline std::tuple<path::const_iterator, path::const_iterator> find_stationary_points(const path::const_iterator start_it, const path::const_iterator end_it, const int radius_m, const int time_s) {
-    // Find the points where successive distance travelled values
+    // Find the points where successive distance traveled values
     // does not go further than radius_m
     
     auto start = start_it;
@@ -631,7 +631,7 @@ inline std::tuple<path::const_iterator, path::const_iterator> find_stationary_po
         // Is this distance within our "stationary" circle?
         if (delta < radius_m) {
             // yes, and is the time difference large enough such that
-            // we can expect a reasonable distance travelled and so count 
+            // we can expect a reasonable distance traveled and so count 
             // this as a stationary region?            
             if (i->timestamp - start->timestamp >  std::chrono::seconds(time_s)) {
                 time_ok = true;
