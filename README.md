@@ -126,6 +126,17 @@ struct path_point {
 typedef std::vector<path_point> path;
 ```
 
++ waypoint - represents a path waypoint, waypoints can be written to an output GPX file along with the path points using save_gpx_trk().
+
+```cpp
+struct waypoint {
+    std::string name;
+    location loc;
+    path_time timestamp = {};
+    std::string cmt = {};
+};
+```
+
 + path_value - a numerical value that can be associated with a path point, e.g. speed or distance etc.
 
 ```cpp
