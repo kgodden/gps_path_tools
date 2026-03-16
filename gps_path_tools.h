@@ -70,6 +70,19 @@ struct path_value {
 
 typedef std::vector<path_point> path;
 
+//
+// Waypoints
+//
+// Represents a waypoint
+struct waypoint {
+    std::string name;
+    location loc;
+    path_time timestamp = {};
+    std::string cmt = {};
+};
+
+typedef std::vector<waypoint> waypoints;
+
 // Holds some path summary data, use
 // generate_path_summary() to create a summary.
 struct path_summary {

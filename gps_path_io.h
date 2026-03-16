@@ -20,6 +20,7 @@
 #include <cstring>
 #include <fstream>
 #include <regex>
+#include <optional>
 
 namespace gps_path_tools {
 
@@ -168,7 +169,11 @@ path load_gpx_trk(const std::string& filename) {
     return gpx_path;
 }
 
-inline bool save_gpx_trk(const std::string filename, const path::iterator start_it, const path::iterator end_it) {
+inline bool internal_save_gpx_trk(const std::string filename,
+                                const path::iterator start_it,
+                                const path::iterator end_it,
+                                const std::optional<waypoints::iterator> start_way,
+                                const std::optional<waypoints::iterator> end_way) {
 
     if (start_it == end_it)
         return false;
@@ -177,8 +182,7 @@ inline bool save_gpx_trk(const std::string filename, const path::iterator start_
                 <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1">
                   <metadata>
                   </metadata>
-                  <trk>
-                    <trkseg>
+                  
                 )";
     
     static const std::string_view footer = R"(</trkseg>
@@ -194,6 +198,47 @@ inline bool save_gpx_trk(const std::string filename, const path::iterator start_
     out << header;
     out.precision(10);
     
+    /*
+    Like:
+        <wpt lat="37.7749" lon="-122.4194">
+            <ele>16.0</ele>
+            <time>2026-02-20T15:00:00Z</time>
+            <name>San Francisco</name>
+            <cmt>Visited during trip</cmt>
+        </wpt>
+    
+    */
+   
+    // Stream waypoints if any
+    if (start_way && end_way) {
+        const auto end = end_way.value();
+        for (auto w = start_way.value(); w != end; ++w) {
+            const auto lat = w->loc.lat;
+            const auto lon = w->loc.lon;
+
+            out << "<wpt lat=\"" << lat << "\"" << " lon=\"" << lon << "\">" << std::endl;
+            out << "<ele>" << w->loc.ele << "</ele>" << std::endl;
+
+            if (w->timestamp != std::chrono::system_clock::time_point{}) {
+                const auto time = time_to_str_utc(w->timestamp);
+                out << "<time>" << time << "</time>" << std::endl;
+            }
+
+            if (!w->name.empty()) {
+                out << "<name>" << w->name << "</name>" << std::endl;
+            }
+
+            if (!w->cmt.empty()) {
+                out << "<cmt>" << w->cmt << "</cmt>" << std::endl;
+            }
+            
+            out << "</wpt>";
+            out << std::endl;
+        }
+    }
+
+    out << "<trk><trkseg>";
+                    
     /*
     Like: 
     <trkpt lat="52.988222" lon="-6.413189">
@@ -217,6 +262,23 @@ inline bool save_gpx_trk(const std::string filename, const path::iterator start_
     out << footer;
 
     return true;
+}
+
+inline bool save_gpx_trk(const std::string filename,
+                            const path::iterator start_it,
+                            const path::iterator end_it) {
+                                
+    return internal_save_gpx_trk(filename, start_it, end_it, {}, {});
+}
+
+inline bool save_gpx_trk(const std::string filename,
+                        const path::iterator start_it,
+                        const path::iterator end_it,
+                        const waypoints::iterator start_way,
+                        const waypoints::iterator end_way) {
+
+    return internal_save_gpx_trk(filename, start_it, end_it, start_way, end_way);
+
 }
 
 } // namespace

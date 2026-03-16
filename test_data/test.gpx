@@ -2,9 +2,20 @@
                 <gpx version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1">
                   <metadata>
                   </metadata>
-                  <trk>
-                    <trkseg>
-                <trkpt lat="52.988201" lon="-6.413192">
+                  
+                <wpt lat="52.988201" lon="-6.413192">
+<ele>165.56749</ele>
+<time>2022-05-07T10:20:06.433000Z</time>
+<name>wp1</name>
+<cmt>wp1</cmt>
+</wpt>
+<wpt lat="52.988222" lon="-6.413189">
+<ele>166.27321</ele>
+<time>2022-05-07T10:20:08.000000Z</time>
+<name>wp2</name>
+<cmt>wp2</cmt>
+</wpt>
+<trk><trkseg><trkpt lat="52.988201" lon="-6.413192">
 <ele>165.56749</ele>
 <time>2022-05-07T10:20:06.433000Z</time>
 </trkpt>

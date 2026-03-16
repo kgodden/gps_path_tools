@@ -400,7 +400,12 @@ TEST_CASE("test_save_gpx_trk") {
     auto path = load_gpx_trk(make_data_path("table_mountain_loop.gpx"));
     CHECK(value_test((int)path.size(), 6115));
     
-    auto ok = save_gpx_trk(make_data_path("test.gpx"), path.begin(), path.end());
+    waypoints wp {
+        {"wp1", path[0].loc , path[0].timestamp, "wp1"},
+        {"wp2", path[1].loc, path[1].timestamp, "wp2"},       
+    };
+
+    auto ok = save_gpx_trk(make_data_path("test.gpx"), path.begin(), path.end(), wp.begin(), wp.end());
     CHECK(ok);
     
     auto path1 = load_gpx_trk(make_data_path("test.gpx"));
