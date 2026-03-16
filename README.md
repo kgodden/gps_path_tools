@@ -249,17 +249,19 @@ void axis_aligned_bounding_box() {
 
     std::cout << "Bounding box corners NW: " << to_string(nw) << ", SE: " << to_string(se) <<
             ", NS length (m): " << ns_length << ", WE length (m): " << we_length << std::endl; 
-    
-    // Add the corner points onto the end of
-    // the path so that we can save it as GPX
-    // and load it to view the path and bounding box.
-    path.push_back({ nw });
-    path.push_back({ ne });
-    path.push_back({ se });
-    path.push_back({ sw });
-    path.push_back({ nw });
 
-    save_gpx_trk("al_bounding_box.gpx", path.begin(), path.end());
+    // Add the corner points as waypoints
+    // so that we can save it as GPX
+    // and load it to view the path and corners of 
+    // the bounding box.
+    waypoints way {
+        { "North West Corner", nw },
+        { "North East Corner", ne },
+        { "South East Corner", se },
+        { "South West Corner", sw },
+    };
+
+    save_gpx_trk("al_bounding_box.gpx", path.begin(), path.end(), way.begin(), way.end());
 }
 ```
 
